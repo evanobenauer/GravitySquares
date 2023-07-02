@@ -17,15 +17,6 @@ dependencies {
     implementation 'com.github.evanobenauer:GlowUI:1.0.1'
     implementation 'com.github.evanobenauer:GlowLib:1.1.5'
 
-    implementation 'org.apache.logging.log4j:log4j:2.11.2'
-    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.2'
-
-    implementation 'org.json:json:20210307'
-
-    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
-
-    implementation 'org.apache.commons:commons-csv:1.8'
-
     implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
 
     implementation "org.lwjgl:lwjgl"
