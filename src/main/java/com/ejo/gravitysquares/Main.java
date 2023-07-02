@@ -7,7 +7,7 @@ import com.ejo.gravitysquares.scenes.TitleScene;
 public class Main {
 
     public static Window window = new Window(
-            "Orbit",
+            "Gravity Squares",
             new Vector(100,100),
             new Vector(1400,800),
             new TitleScene(),
