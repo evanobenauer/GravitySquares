@@ -12,10 +12,10 @@ public class PhysicsUtil {
     public static double g = 9.8;
     public static double G = 6.67 * Math.pow(10, -11);
 
-    public static void calculateGravityForcesAndCollisions(ArrayList<PhysicsRectangle> objects, double G) {
+    public static void calculateGravityForcesAndCollisions(ArrayList<PhysicsRectangle> objects, double G, boolean doWallBounce) {
         for (PhysicsRectangle forceObject : objects) {
             if (!forceObject.isDisabled()) {
-                forceObject.doBounce();
+                if (doWallBounce) forceObject.doBounce();
 
                 VectorMod gravityForce = new VectorMod(Vector.NULL);
 

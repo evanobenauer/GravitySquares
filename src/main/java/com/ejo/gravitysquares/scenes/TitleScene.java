@@ -15,6 +15,7 @@ import com.ejo.glowui.util.QuickDraw;
 import com.ejo.gravitysquares.objects.PhysicsRectangle;
 
 import java.awt.*;
+import java.util.ConcurrentModificationException;
 import java.util.Random;
 
 public class TitleScene extends Scene {
@@ -23,15 +24,17 @@ public class TitleScene extends Scene {
     private final Setting<Double> minSize = new Setting<>("minSize",3d);
     private final Setting<Double> maxSize = new Setting<>("maxSize",15d);
     private final Setting<Boolean> bigSquare = new Setting<>("bigSquare",false);
+    private final Setting<Boolean> wallBounce = new Setting<>("doBounce",true);
 
     private final SliderUI<Integer> squareCountSlider = new SliderUI<>(this,"Square Count",new Vector(10,10),new Vector(300,20),ColorE.BLUE,squareCount,0,500,1, SliderUI.Type.INTEGER,true);
-    private final SliderUI<Double> minSizeSlider = new SliderUI<>(this,"Min Size",new Vector(10,40),new Vector(300,20),ColorE.BLUE,minSize,0.1d,10d,.1, SliderUI.Type.FLOAT,true);
-    private final SliderUI<Double> maxSizeSlider = new SliderUI<>(this,"Max Size",new Vector(10,70),new Vector(300,20),ColorE.BLUE,maxSize,11d,20d,.1, SliderUI.Type.FLOAT,true);
+    private final SliderUI<Double> minSizeSlider = new SliderUI<>(this,"Min Size",new Vector(10,40),new Vector(300,20),ColorE.BLUE,minSize,0.1d,50d,.1, SliderUI.Type.FLOAT,true);
+    private final SliderUI<Double> maxSizeSlider = new SliderUI<>(this,"Max Size",new Vector(10,70),new Vector(300,20),ColorE.BLUE,maxSize,1.1d,50d,.1, SliderUI.Type.FLOAT,true);
 
-    private final ToggleUI bigSquareToggle = new ToggleUI(this,"Big Square",new Vector(10,100),new Vector(300,20),ColorE.BLUE,bigSquare);
+    private final ToggleUI bigSquareToggle = new ToggleUI(this,"Big Square",new Vector(10,130),new Vector(300,20),ColorE.BLUE,bigSquare);
+    private final ToggleUI wallBounceToggle = new ToggleUI(this,"Do Wall Bounce",new Vector(10,100),new Vector(300,20),ColorE.BLUE, wallBounce);
 
     private final ButtonUI button = new ButtonUI(this,"Start!",Vector.NULL,new Vector(200,60),new ColorE(0,125,200,200),() -> {
-        getWindow().setScene(new SquareOrbitScene(squareCount.get(),minSize.get(),maxSize.get(),bigSquare.get()));
+        getWindow().setScene(new SquareOrbitScene(squareCount.get(),minSize.get(),maxSize.get(),bigSquare.get(),wallBounce.get()));
         SettingManager.getDefaultManager().saveAll();
     });
 
@@ -60,7 +63,7 @@ public class TitleScene extends Scene {
             }
 
             //Add Widgets
-            addElements(button,title,squareCountSlider,minSizeSlider,maxSizeSlider,bigSquareToggle);
+            addElements(button,title,squareCountSlider,minSizeSlider,maxSizeSlider,bigSquareToggle,wallBounceToggle);
         });
 
         super.draw();
@@ -71,7 +74,14 @@ public class TitleScene extends Scene {
 
     @Override
     public void tick() {
-        super.tick();
+        try {
+            super.tick();
+        } catch (ConcurrentModificationException e) {
+            e.printStackTrace();
+        }
+
+        //Set size range caps
+        if (minSize.get() > maxSize.get()) minSize.set(maxSize.get());
 
         //Twinkle Stars
         Random random = new Random();

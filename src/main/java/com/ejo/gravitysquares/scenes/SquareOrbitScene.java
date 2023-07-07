@@ -14,6 +14,7 @@ import com.ejo.glowlib.misc.ColorE;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.Random;
 
 public class SquareOrbitScene extends Scene {
@@ -23,14 +24,19 @@ public class SquareOrbitScene extends Scene {
     private final ArrayList<PhysicsRectangle> physicsSquares = new ArrayList<>();
     private PhysicsRectangle bigSquare = null;
 
-    public SquareOrbitScene(int squareCount, double sizeMin, double sizeMax, boolean bigSquare) {
+    private final boolean wallBounce;
+
+    public SquareOrbitScene(int squareCount, double sizeMin, double sizeMax, boolean bigSquare, boolean wallBounce) {
         super("Orbit Screen");
         DoOnce.default1.reset();
+
+        this.wallBounce = wallBounce;
 
         //Create the little squares
         Random random = new Random();
         for (int i = 0; i < squareCount; i++) {
-            double trueSize = random.nextDouble(sizeMin,sizeMax);
+            double trueSize = sizeMin == sizeMax ? sizeMax : random.nextDouble(sizeMin, sizeMax);
+            double startVelRange = 10;
             PhysicsRectangle shape = new PhysicsRectangle(
                     new RectangleUI(
                             this,
@@ -38,7 +44,7 @@ public class SquareOrbitScene extends Scene {
                             new Vector(trueSize,trueSize),
                             new ColorE(random.nextInt(0,255),random.nextInt(0,255),random.nextInt(0,255),255)),
                     trueSize*trueSize*trueSize,
-                    Vector.NULL,
+                    new Vector(random.nextDouble(-startVelRange,startVelRange),random.nextDouble(-startVelRange,startVelRange)),
                     Vector.NULL);
             addElements(shape);
         }
@@ -94,17 +100,21 @@ public class SquareOrbitScene extends Scene {
     @Override
     public void tick() {
         //Calculate and set the forces on each physics rectangle
-        PhysicsUtil.calculateGravityForcesAndCollisions(physicsSquares,1);
+        PhysicsUtil.calculateGravityForcesAndCollisions(physicsSquares, 1, wallBounce);
 
         //Calculate the forces/accelerations. Reset's the added forces after acceleration calculation
-        super.tick();
+        try { //Remove this when you update GlowUI as it is now implemented
+            super.tick();
+        } catch (ConcurrentModificationException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onKeyPress(int key, int scancode, int action, int mods) {
         super.onKeyPress(key, scancode, action, mods);
 
-        //Increase or Decrease the max tickrate for calculations using the + or - key; This is a debug feature
+        //Increase or Decrease the max tick rate for calculations using the + or - key; This is a debug feature
         if (key == Key.KEY_PLUS.getId() && action == Key.ACTION_PRESS) {
             getWindow().setMaxTPS(getWindow().getMaxTPS() + 5);
         }

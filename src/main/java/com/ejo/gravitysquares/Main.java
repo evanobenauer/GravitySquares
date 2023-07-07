@@ -9,7 +9,7 @@ public class Main {
     public static Window window = new Window(
             "Gravity Squares",
             new Vector(100,100),
-            new Vector(1400,800),
+            new Vector(1400,900),
             new TitleScene(),
             true,4,60,60
     );
