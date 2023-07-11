@@ -26,19 +26,19 @@ public class TitleScene extends Scene {
     private final Setting<Boolean> bigSquare = new Setting<>("bigSquare",false);
     private final Setting<Boolean> wallBounce = new Setting<>("doBounce",true);
 
-    private final SliderUI<Integer> squareCountSlider = new SliderUI<>(this,"Square Count",new Vector(10,10),new Vector(300,20),ColorE.BLUE,squareCount,0,500,1, SliderUI.Type.INTEGER,true);
-    private final SliderUI<Double> minSizeSlider = new SliderUI<>(this,"Min Size",new Vector(10,40),new Vector(300,20),ColorE.BLUE,minSize,0.1d,50d,.1, SliderUI.Type.FLOAT,true);
-    private final SliderUI<Double> maxSizeSlider = new SliderUI<>(this,"Max Size",new Vector(10,70),new Vector(300,20),ColorE.BLUE,maxSize,1.1d,50d,.1, SliderUI.Type.FLOAT,true);
+    private final SliderUI<Integer> squareCountSlider = new SliderUI<>("Square Count",new Vector(10,10),new Vector(300,20),ColorE.BLUE,squareCount,0,500,1, SliderUI.Type.INTEGER,true);
+    private final SliderUI<Double> minSizeSlider = new SliderUI<>("Min Size",new Vector(10,40),new Vector(300,20),ColorE.BLUE,minSize,0.1d,50d,.1, SliderUI.Type.FLOAT,true);
+    private final SliderUI<Double> maxSizeSlider = new SliderUI<>("Max Size",new Vector(10,70),new Vector(300,20),ColorE.BLUE,maxSize,1.1d,50d,.1, SliderUI.Type.FLOAT,true);
 
-    private final ToggleUI bigSquareToggle = new ToggleUI(this,"Big Square",new Vector(10,130),new Vector(300,20),ColorE.BLUE,bigSquare);
-    private final ToggleUI wallBounceToggle = new ToggleUI(this,"Do Wall Bounce",new Vector(10,100),new Vector(300,20),ColorE.BLUE, wallBounce);
+    private final ToggleUI bigSquareToggle = new ToggleUI("Big Square",new Vector(10,130),new Vector(300,20),ColorE.BLUE,bigSquare);
+    private final ToggleUI wallBounceToggle = new ToggleUI("Do Wall Bounce",new Vector(10,100),new Vector(300,20),ColorE.BLUE, wallBounce);
 
-    private final ButtonUI button = new ButtonUI(this,"Start!",Vector.NULL,new Vector(200,60),new ColorE(0,125,200,200),() -> {
+    private final ButtonUI button = new ButtonUI("Start!",Vector.NULL,new Vector(200,60),new ColorE(0,125,200,200),() -> {
         getWindow().setScene(new SquareOrbitScene(squareCount.get(),minSize.get(),maxSize.get(),bigSquare.get(),wallBounce.get()));
         SettingManager.getDefaultManager().saveAll();
     });
 
-    private final TextUI title = new TextUI(this,"Gravity Squares",new Font("Arial Black",Font.BOLD,50),Vector.NULL,ColorE.WHITE);
+    private final TextUI title = new TextUI("Gravity Squares",new Font("Arial Black",Font.BOLD,50),Vector.NULL,ColorE.WHITE);
 
     public TitleScene() {
         super("Title");
@@ -48,16 +48,16 @@ public class TitleScene extends Scene {
     }
 
     @Override
-    public void draw() {
+    public void draw(Scene scene, Vector mousePos) {
         //Draw Background
-        QuickDraw.drawRect(this,Vector.NULL,getWindow().getSize(),new ColorE(25,25,25,255));
+        QuickDraw.drawRect(Vector.NULL,getWindow().getSize(),new ColorE(25,25,25,255));
 
         DoOnce.default6.run(() -> {
             //Create Stars
             Random random = new Random();
             for (int i = 0; i < 100; i++) {
                 ColorE color = new ColorE(255, random.nextInt(125,255), 100,255);
-                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(this,new Vector(random.nextDouble(0,getWindow().getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
+                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getWindow().getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
                 obj.disable(true);
                 addElements(obj);
             }
@@ -66,16 +66,16 @@ public class TitleScene extends Scene {
             addElements(button,title,squareCountSlider,minSizeSlider,maxSizeSlider,bigSquareToggle,wallBounceToggle);
         });
 
-        super.draw();
+        super.draw(scene, mousePos);
     }
 
     private double step = 0;
     private final StopWatch watch = new StopWatch();
 
     @Override
-    public void tick() {
+    public void tick(Scene scene, Vector mousePos) {
         try {
-            super.tick();
+            super.tick(scene, mousePos);
         } catch (ConcurrentModificationException e) {
             e.printStackTrace();
         }

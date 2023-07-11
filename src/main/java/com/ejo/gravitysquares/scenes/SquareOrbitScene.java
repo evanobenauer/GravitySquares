@@ -19,7 +19,7 @@ import java.util.Random;
 
 public class SquareOrbitScene extends Scene {
 
-    private final ButtonUI buttonUI = new ButtonUI(this,Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255),() -> getWindow().setScene(new TitleScene()));
+    private final ButtonUI buttonUI = new ButtonUI(Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255),() -> getWindow().setScene(new TitleScene()));
 
     private final ArrayList<PhysicsRectangle> physicsSquares = new ArrayList<>();
     private PhysicsRectangle bigSquare = null;
@@ -39,7 +39,6 @@ public class SquareOrbitScene extends Scene {
             double startVelRange = 10;
             PhysicsRectangle shape = new PhysicsRectangle(
                     new RectangleUI(
-                            this,
                             Vector.NULL,
                             new Vector(trueSize,trueSize),
                             new ColorE(random.nextInt(0,255),random.nextInt(0,255),random.nextInt(0,255),255)),
@@ -53,7 +52,7 @@ public class SquareOrbitScene extends Scene {
         if (bigSquare) {
             int mul = 3;
             addElements(this.bigSquare = new PhysicsRectangle(
-                    new RectangleUI(this,Vector.NULL,new Vector(sizeMax,sizeMax).getMultiplied(mul),ColorE.YELLOW),
+                    new RectangleUI(Vector.NULL,new Vector(sizeMax,sizeMax).getMultiplied(mul),ColorE.YELLOW),
                     sizeMax*sizeMax*sizeMax*mul*mul*mul,Vector.NULL,Vector.NULL));
         }
         addPhysicsObjects();
@@ -63,8 +62,8 @@ public class SquareOrbitScene extends Scene {
     }
 
     @Override
-    public void draw() {
-        //Initialization
+    public void draw(Scene scene, Vector mousePos) {
+    //Initialization
         DoOnce.default1.run(() -> {
             //Set random starting positions for Little Squares
             Random random = new Random();
@@ -78,7 +77,7 @@ public class SquareOrbitScene extends Scene {
             //Create Stars
             for (int i = 0; i < 100; i++) {
                 ColorE color = new ColorE(255, 255, 255,255);
-                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(this,new Vector(random.nextDouble(0,getWindow().getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
+                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getWindow().getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
                 obj.disable(true);
                 addElements(obj);
             }
@@ -88,31 +87,27 @@ public class SquareOrbitScene extends Scene {
         buttonUI.setPos(new Vector(getWindow().getSize().getX(),0).getAdded(-buttonUI.getSize().getX(),0));
 
         //Draw all screen objects
-        super.draw();
+        super.draw(scene, mousePos);
 
         //Draw X for Exit Button
-        QuickDraw.drawText(this,"X",new Font("Arial",Font.PLAIN,14),buttonUI.getPos().getAdded(3,0),ColorE.WHITE);
+        QuickDraw.drawText("X",new Font("Arial",Font.PLAIN,14),buttonUI.getPos().getAdded(3,0),ColorE.WHITE);
 
         //Draw FPS/TPS
         QuickDraw.drawFPSTPS(this,new Vector(1,1),10,false);
     }
 
     @Override
-    public void tick() {
+    public void tick(Scene scene, Vector mousePos) {
         //Calculate and set the forces on each physics rectangle
-        PhysicsUtil.calculateGravityForcesAndCollisions(physicsSquares, 1, wallBounce);
+        PhysicsUtil.calculateGravityForcesAndCollisions(this, physicsSquares, 1, wallBounce);
 
         //Calculate the forces/accelerations. Reset's the added forces after acceleration calculation
-        try { //Remove this when you update GlowUI as it is now implemented
-            super.tick();
-        } catch (ConcurrentModificationException e) {
-            e.printStackTrace();
-        }
+        super.tick(scene, mousePos);
     }
 
     @Override
-    public void onKeyPress(int key, int scancode, int action, int mods) {
-        super.onKeyPress(key, scancode, action, mods);
+    public void onKeyPress(Scene scene, int key, int scancode, int action, int mods) {
+        super.onKeyPress(scene, key, scancode, action, mods);
 
         //Increase or Decrease the max tick rate for calculations using the + or - key; This is a debug feature
         if (key == Key.KEY_PLUS.getId() && action == Key.ACTION_PRESS) {

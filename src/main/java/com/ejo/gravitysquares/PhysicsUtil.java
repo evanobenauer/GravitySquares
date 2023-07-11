@@ -1,5 +1,6 @@
 package com.ejo.gravitysquares;
 
+import com.ejo.glowui.scene.Scene;
 import com.ejo.glowui.scene.elements.shape.physics.PhysicsObjectUI;
 import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.math.VectorMod;
@@ -12,10 +13,10 @@ public class PhysicsUtil {
     public static double g = 9.8;
     public static double G = 6.67 * Math.pow(10, -11);
 
-    public static void calculateGravityForcesAndCollisions(ArrayList<PhysicsRectangle> objects, double G, boolean doWallBounce) {
+    public static void calculateGravityForcesAndCollisions(Scene scene, ArrayList<PhysicsRectangle> objects, double G, boolean doWallBounce) {
         for (PhysicsRectangle forceObject : objects) {
             if (!forceObject.isDisabled()) {
-                if (doWallBounce) forceObject.doBounce();
+                if (doWallBounce) forceObject.doBounce(scene);
 
                 VectorMod gravityForce = new VectorMod(Vector.NULL);
 
