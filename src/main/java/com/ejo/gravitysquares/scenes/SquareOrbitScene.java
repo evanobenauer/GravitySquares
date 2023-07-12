@@ -68,23 +68,23 @@ public class SquareOrbitScene extends Scene {
             //Set random starting positions for Little Squares
             Random random = new Random();
             for (PhysicsRectangle obj : physicsSquares) {
-                obj.setPos(new Vector(random.nextDouble(0,getWindow().getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())));
+                obj.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getSize().getY())));
             }
 
             //Set Big Square start in the middle
-            if (bigSquare != null) bigSquare.setPos(getWindow().getSize().getMultiplied(.5).getAdded(bigSquare.getRectangle().getSize().getMultiplied(-.5)));
+            if (bigSquare != null) bigSquare.setPos(getSize().getMultiplied(.5).getAdded(bigSquare.getRectangle().getSize().getMultiplied(-.5)));
 
             //Create Stars
             for (int i = 0; i < 100; i++) {
                 ColorE color = new ColorE(255, 255, 255,255);
-                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getWindow().getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
+                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
                 obj.disable(true);
                 addElements(obj);
             }
         });
 
         //Set exit button to top right corner
-        buttonUI.setPos(new Vector(getWindow().getSize().getX(),0).getAdded(-buttonUI.getSize().getX(),0));
+        buttonUI.setPos(new Vector(getSize().getX(),0).getAdded(-buttonUI.getSize().getX(),0));
 
         //Draw all screen objects
         super.draw(scene, mousePos);

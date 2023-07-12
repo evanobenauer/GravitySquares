@@ -50,14 +50,14 @@ public class TitleScene extends Scene {
     @Override
     public void draw(Scene scene, Vector mousePos) {
         //Draw Background
-        QuickDraw.drawRect(Vector.NULL,getWindow().getSize(),new ColorE(25,25,25,255));
+        QuickDraw.drawRect(Vector.NULL,getSize(),new ColorE(25,25,25,255));
 
         DoOnce.default6.run(() -> {
             //Create Stars
             Random random = new Random();
             for (int i = 0; i < 100; i++) {
                 ColorE color = new ColorE(255, random.nextInt(125,255), 100,255);
-                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getWindow().getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
+                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
                 obj.disable(true);
                 addElements(obj);
             }
@@ -97,12 +97,12 @@ public class TitleScene extends Scene {
         double yOffset = -40;
 
         //Set Title Pos
-        title.setPos(getWindow().getSize().getMultiplied(.5d).getAdded(title.getSize().getMultiplied(-.5)).getAdded(0,yOffset));
+        title.setPos(getSize().getMultiplied(.5d).getAdded(title.getSize().getMultiplied(-.5)).getAdded(0,yOffset));
         title.setPos(title.getPos().getAdded(new Vector(0,Math.sin(step) * 8)));
         step += 0.05;
         if (step >= Math.PI*2) step = 0;
 
         //Set Button Pos
-        button.setPos(getWindow().getSize().getMultiplied(.5d).getAdded(button.getSize().getMultiplied(-.5)).getAdded(0,title.getFont().getSize() + 30).getAdded(0,yOffset));
+        button.setPos(getSize().getMultiplied(.5d).getAdded(button.getSize().getMultiplied(-.5)).getAdded(0,title.getFont().getSize() + 30).getAdded(0,yOffset));
     }
 }
