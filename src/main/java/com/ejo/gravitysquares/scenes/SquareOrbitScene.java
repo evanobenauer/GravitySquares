@@ -19,7 +19,7 @@ import java.util.Random;
 
 public class SquareOrbitScene extends Scene {
 
-    private final ButtonUI buttonUI = new ButtonUI(Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255),() -> getWindow().setScene(new TitleScene()));
+    private final ButtonUI buttonUI = new ButtonUI(Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255), ButtonUI.MouseButton.LEFT,() -> getWindow().setScene(new TitleScene()));
 
     private final ArrayList<PhysicsRectangle> physicsSquares = new ArrayList<>();
     private PhysicsRectangle bigSquare = null;
@@ -28,7 +28,7 @@ public class SquareOrbitScene extends Scene {
 
     public SquareOrbitScene(int squareCount, double sizeMin, double sizeMax, boolean bigSquare, boolean wallBounce) {
         super("Orbit Screen");
-        DoOnce.default1.reset();
+        DoOnce.DEFAULT1.reset();
 
         this.wallBounce = wallBounce;
 
@@ -62,11 +62,28 @@ public class SquareOrbitScene extends Scene {
     }
 
     @Override
-    public void draw(Scene scene, Vector mousePos) {
-    //Initialization
-        DoOnce.default1.run(() -> {
-            //Set random starting positions for Little Squares
+    public void draw() {
+        //Set exit button to top right corner
+        buttonUI.setPos(new Vector(getSize().getX(),0).getAdded(-buttonUI.getSize().getX(),0));
+
+        //Draw all screen objects
+        super.draw();
+
+        //Draw X for Exit Button
+        QuickDraw.drawText("X",new Font("Arial",Font.PLAIN,14),buttonUI.getPos().getAdded(3,0),ColorE.WHITE);
+
+        //Draw FPS/TPS
+        QuickDraw.drawFPSTPS(this,new Vector(1,1),10,false);
+    }
+
+    @Override
+    public void tick() {
+
+        //Initialization
+        DoOnce.DEFAULT1.run(() -> {
             Random random = new Random();
+
+            //Set random starting positions for Little Squares
             for (PhysicsRectangle obj : physicsSquares) {
                 obj.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getSize().getY())));
             }
@@ -78,39 +95,24 @@ public class SquareOrbitScene extends Scene {
             for (int i = 0; i < 100; i++) {
                 ColorE color = new ColorE(255, 255, 255,255);
                 PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
-                obj.disable(true);
+                obj.setDisabled(true);
                 addElements(obj);
             }
         });
 
-        //Set exit button to top right corner
-        buttonUI.setPos(new Vector(getSize().getX(),0).getAdded(-buttonUI.getSize().getX(),0));
-
-        //Draw all screen objects
-        super.draw(scene, mousePos);
-
-        //Draw X for Exit Button
-        QuickDraw.drawText("X",new Font("Arial",Font.PLAIN,14),buttonUI.getPos().getAdded(3,0),ColorE.WHITE);
-
-        //Draw FPS/TPS
-        QuickDraw.drawFPSTPS(this,new Vector(1,1),10,false);
-    }
-
-    @Override
-    public void tick(Scene scene, Vector mousePos) {
         //Calculate and set the forces on each physics rectangle
         PhysicsUtil.calculateGravityForcesAndCollisions(this, physicsSquares, 1, wallBounce);
 
         //Calculate the forces/accelerations. Reset's the added forces after acceleration calculation
-        super.tick(scene, mousePos);
+        super.tick();
     }
 
     @Override
-    public void onKeyPress(Scene scene, int key, int scancode, int action, int mods) {
-        super.onKeyPress(scene, key, scancode, action, mods);
+    public void onKeyPress(int key, int scancode, int action, int mods) {
+        super.onKeyPress(key, scancode, action, mods);
 
         //Increase or Decrease the max tick rate for calculations using the + or - key; This is a debug feature
-        if (key == Key.KEY_PLUS.getId() && action == Key.ACTION_PRESS) {
+        if (key == Key.KEY_EQUALS.getId() && action == Key.ACTION_PRESS) {
             getWindow().setMaxTPS(getWindow().getMaxTPS() + 5);
         }
         if (key == Key.KEY_MINUS.getId() && action == Key.ACTION_PRESS) {

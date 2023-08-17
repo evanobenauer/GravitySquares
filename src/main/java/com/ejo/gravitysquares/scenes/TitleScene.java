@@ -33,7 +33,7 @@ public class TitleScene extends Scene {
     private final ToggleUI bigSquareToggle = new ToggleUI("Big Square",new Vector(10,130),new Vector(300,20),ColorE.BLUE,bigSquare);
     private final ToggleUI wallBounceToggle = new ToggleUI("Do Wall Bounce",new Vector(10,100),new Vector(300,20),ColorE.BLUE, wallBounce);
 
-    private final ButtonUI button = new ButtonUI("Start!",Vector.NULL,new Vector(200,60),new ColorE(0,125,200,200),() -> {
+    private final ButtonUI button = new ButtonUI("Start!",Vector.NULL,new Vector(200,60),new ColorE(0,125,200,200), ButtonUI.MouseButton.LEFT,() -> {
         getWindow().setScene(new SquareOrbitScene(squareCount.get(),minSize.get(),maxSize.get(),bigSquare.get(),wallBounce.get()));
         SettingManager.getDefaultManager().saveAll();
     });
@@ -42,23 +42,24 @@ public class TitleScene extends Scene {
 
     public TitleScene() {
         super("Title");
-        DoOnce.default6.reset();
+        DoOnce.DEFAULT6.reset();
         watch.start();
         SettingManager.getDefaultManager().loadAll();
     }
 
     @Override
-    public void draw(Scene scene, Vector mousePos) {
+    public void draw() {
         //Draw Background
         QuickDraw.drawRect(Vector.NULL,getSize(),new ColorE(25,25,25,255));
 
-        DoOnce.default6.run(() -> {
+        DoOnce.DEFAULT6.run(() -> {
             //Create Stars
             Random random = new Random();
             for (int i = 0; i < 100; i++) {
                 ColorE color = new ColorE(255, random.nextInt(125,255), 100,255);
                 PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
-                obj.disable(true);
+                obj.setDisabled(true);
+                obj.setTicking(false);
                 addElements(obj);
             }
 
@@ -66,19 +67,15 @@ public class TitleScene extends Scene {
             addElements(button,title,squareCountSlider,minSizeSlider,maxSizeSlider,bigSquareToggle,wallBounceToggle);
         });
 
-        super.draw(scene, mousePos);
+        super.draw();
     }
 
     private double step = 0;
     private final StopWatch watch = new StopWatch();
 
     @Override
-    public void tick(Scene scene, Vector mousePos) {
-        try {
-            super.tick(scene, mousePos);
-        } catch (ConcurrentModificationException e) {
-            e.printStackTrace();
-        }
+    public void tick() {
+        super.tick();
 
         //Set size range caps
         if (minSize.get() > maxSize.get()) minSize.set(maxSize.get());
