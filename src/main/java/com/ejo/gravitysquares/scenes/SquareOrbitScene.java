@@ -14,34 +14,34 @@ import com.ejo.glowlib.misc.ColorE;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
 import java.util.Random;
 
 public class SquareOrbitScene extends Scene {
 
-    private final ButtonUI buttonUI = new ButtonUI(Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255), ButtonUI.MouseButton.LEFT,() -> getWindow().setScene(new TitleScene()));
+    private final ButtonUI buttonX = new ButtonUI(Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255), ButtonUI.MouseButton.LEFT,() -> getWindow().setScene(new TitleScene()));
 
-    private final ArrayList<PhysicsRectangle> physicsSquares = new ArrayList<>();
     private PhysicsRectangle bigSquare = null;
 
-    private final boolean wallBounce;
+    private final boolean doWallBounce;
+    private final boolean doCollisions;
 
-    public SquareOrbitScene(int squareCount, double sizeMin, double sizeMax, boolean bigSquare, boolean wallBounce) {
+    public SquareOrbitScene(int squareCount, double sizeMin, double sizeMax, boolean bigSquare, boolean doWallBounce, boolean doCollisions) {
         super("Orbit Screen");
         DoOnce.DEFAULT1.reset();
 
-        this.wallBounce = wallBounce;
+        this.doWallBounce = doWallBounce;
+        this.doCollisions = doCollisions;
 
         //Create the little squares
         Random random = new Random();
         for (int i = 0; i < squareCount; i++) {
-            double trueSize = sizeMin == sizeMax ? sizeMax : random.nextDouble(sizeMin, sizeMax);
+            double trueSize = (sizeMin == sizeMax) ? sizeMax : random.nextDouble(sizeMin, sizeMax);
             double startVelRange = 10;
             PhysicsRectangle shape = new PhysicsRectangle(
                     new RectangleUI(
                             Vector.NULL,
                             new Vector(trueSize,trueSize),
-                            new ColorE(random.nextInt(0,255),random.nextInt(0,255),random.nextInt(0,255),255)),
+                            new ColorE(random.nextInt(25,255),random.nextInt(25,255),random.nextInt(25,255),255)),
                     trueSize*trueSize*trueSize,
                     new Vector(random.nextDouble(-startVelRange,startVelRange),random.nextDouble(-startVelRange,startVelRange)),
                     Vector.NULL);
@@ -55,22 +55,21 @@ public class SquareOrbitScene extends Scene {
                     new RectangleUI(Vector.NULL,new Vector(sizeMax,sizeMax).getMultiplied(mul),ColorE.YELLOW),
                     sizeMax*sizeMax*sizeMax*mul*mul*mul,Vector.NULL,Vector.NULL));
         }
-        addPhysicsObjects();
 
         //Add Button
-        addElements(buttonUI);
+        addElements(buttonX);
     }
 
     @Override
     public void draw() {
         //Set exit button to top right corner
-        buttonUI.setPos(new Vector(getSize().getX(),0).getAdded(-buttonUI.getSize().getX(),0));
+        buttonX.setPos(new Vector(getSize().getX(),0).getAdded(-buttonX.getSize().getX(),0));
 
         //Draw all screen objects
         super.draw();
 
         //Draw X for Exit Button
-        QuickDraw.drawText("X",new Font("Arial",Font.PLAIN,14),buttonUI.getPos().getAdded(3,0),ColorE.WHITE);
+        QuickDraw.drawText("X",new Font("Arial",Font.PLAIN,14), buttonX.getPos().getAdded(3,0),ColorE.WHITE);
 
         //Draw FPS/TPS
         QuickDraw.drawFPSTPS(this,new Vector(1,1),10,false);
@@ -78,30 +77,11 @@ public class SquareOrbitScene extends Scene {
 
     @Override
     public void tick() {
-
-        //Initialization
-        DoOnce.DEFAULT1.run(() -> {
-            Random random = new Random();
-
-            //Set random starting positions for Little Squares
-            for (PhysicsRectangle obj : physicsSquares) {
-                obj.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getSize().getY())));
-            }
-
-            //Set Big Square start in the middle
-            if (bigSquare != null) bigSquare.setPos(getSize().getMultiplied(.5).getAdded(bigSquare.getRectangle().getSize().getMultiplied(-.5)));
-
-            //Create Stars
-            for (int i = 0; i < 100; i++) {
-                ColorE color = new ColorE(255, 255, 255,255);
-                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
-                obj.setDisabled(true);
-                addElements(obj);
-            }
-        });
+        //Initializes the Object and Star positions
+        initObjectPositions();
 
         //Calculate and set the forces on each physics rectangle
-        PhysicsUtil.calculateGravityForcesAndCollisions(this, physicsSquares, 1, wallBounce);
+        PhysicsUtil.calculateGravityForcesAndCollisions(this, getPhysicsSquares(), 1, doWallBounce, doCollisions);
 
         //Calculate the forces/accelerations. Reset's the added forces after acceleration calculation
         super.tick();
@@ -120,11 +100,35 @@ public class SquareOrbitScene extends Scene {
         }
     }
 
-    public void addPhysicsObjects() {
-        for (ElementUI element : getElements()) {
-            if (element instanceof PhysicsRectangle physicsObject)
-                physicsSquares.add(physicsObject);
+    private void initObjectPositions() {
+        DoOnce.DEFAULT1.run(() -> {
+            Random random = new Random();
+
+            //Set random starting positions for Little Squares
+            for (PhysicsRectangle obj : getPhysicsSquares()) {
+                obj.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getSize().getY())));
+            }
+
+            //Set Big Square start in the middle
+            if (bigSquare != null) bigSquare.setPos(getSize().getMultiplied(.5).getAdded(bigSquare.getRectangle().getSize().getMultiplied(-.5)));
+
+            //Create Stars
+            for (int i = 0; i < 100; i++) {
+                ColorE color = new ColorE(255, 255, 255,255);
+                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
+                obj.setDisabled(true);
+                addElements(obj);
+            }
+        });
+    }
+
+
+    private ArrayList<PhysicsRectangle> getPhysicsSquares() {
+        ArrayList<PhysicsRectangle> rectangles = new ArrayList<>();
+        for (ElementUI elementUI : getElements()) if (elementUI instanceof PhysicsRectangle rectangle) {
+            rectangles.add(rectangle);
         }
+        return rectangles;
     }
 
 }

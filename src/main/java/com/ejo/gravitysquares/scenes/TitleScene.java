@@ -11,11 +11,9 @@ import com.ejo.glowui.scene.elements.ElementUI;
 import com.ejo.glowui.scene.elements.TextUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.widget.*;
-import com.ejo.glowui.util.QuickDraw;
 import com.ejo.gravitysquares.objects.PhysicsRectangle;
 
 import java.awt.*;
-import java.util.ConcurrentModificationException;
 import java.util.Random;
 
 public class TitleScene extends Scene {
@@ -24,34 +22,75 @@ public class TitleScene extends Scene {
     private final Setting<Double> minSize = new Setting<>("minSize",3d);
     private final Setting<Double> maxSize = new Setting<>("maxSize",15d);
     private final Setting<Boolean> bigSquare = new Setting<>("bigSquare",false);
-    private final Setting<Boolean> wallBounce = new Setting<>("doBounce",true);
+    private final Setting<Boolean> doWallBounce = new Setting<>("doBounce",true);
+    private final Setting<Boolean> doCollisions = new Setting<>("doCollisions",false);
 
-    private final SliderUI<Integer> squareCountSlider = new SliderUI<>("Square Count",new Vector(10,10),new Vector(300,20),ColorE.BLUE,squareCount,0,500,1, SliderUI.Type.INTEGER,true);
-    private final SliderUI<Double> minSizeSlider = new SliderUI<>("Min Size",new Vector(10,40),new Vector(300,20),ColorE.BLUE,minSize,0.1d,50d,.1, SliderUI.Type.FLOAT,true);
-    private final SliderUI<Double> maxSizeSlider = new SliderUI<>("Max Size",new Vector(10,70),new Vector(300,20),ColorE.BLUE,maxSize,1.1d,50d,.1, SliderUI.Type.FLOAT,true);
+    private final SliderUI<Integer> sliderSquareCount = new SliderUI<>("Square Count",new Vector(10,10),new Vector(300,20),ColorE.BLUE,squareCount,0,500,1, SliderUI.Type.INTEGER,true);
+    private final SliderUI<Double> sliderMinSize = new SliderUI<>("Min Size",new Vector(10,40),new Vector(300,20),ColorE.BLUE,minSize,0.1d,50d,.1, SliderUI.Type.FLOAT,true);
+    private final SliderUI<Double> sliderMaxSize = new SliderUI<>("Max Size",new Vector(10,70),new Vector(300,20),ColorE.BLUE,maxSize,1.1d,50d,.1, SliderUI.Type.FLOAT,true);
 
-    private final ToggleUI bigSquareToggle = new ToggleUI("Big Square",new Vector(10,130),new Vector(300,20),ColorE.BLUE,bigSquare);
-    private final ToggleUI wallBounceToggle = new ToggleUI("Do Wall Bounce",new Vector(10,100),new Vector(300,20),ColorE.BLUE, wallBounce);
+    private final ToggleUI toggleDoWallBounce = new ToggleUI("Do Wall Bounce",new Vector(10,100),new Vector(300,20),ColorE.BLUE, doWallBounce);
+    private final ToggleUI toggleDoCollisions = new ToggleUI("Do Collisions",new Vector(10,130),new Vector(300,20),ColorE.BLUE, doCollisions);
+    private final ToggleUI toggleBigSquare = new ToggleUI("Big Square",new Vector(10,160),new Vector(300,20),ColorE.BLUE,bigSquare);
 
-    private final ButtonUI button = new ButtonUI("Start!",Vector.NULL,new Vector(200,60),new ColorE(0,125,200,200), ButtonUI.MouseButton.LEFT,() -> {
-        getWindow().setScene(new SquareOrbitScene(squareCount.get(),minSize.get(),maxSize.get(),bigSquare.get(),wallBounce.get()));
+    private final ButtonUI buttonStart = new ButtonUI("Start!",Vector.NULL,new Vector(200,60),new ColorE(0,125,200,200), ButtonUI.MouseButton.LEFT,() -> {
+        getWindow().setScene(new SquareOrbitScene(squareCount.get(),minSize.get(),maxSize.get(),bigSquare.get(), doWallBounce.get(), doCollisions.get()));
         SettingManager.getDefaultManager().saveAll();
     });
 
     private final TextUI title = new TextUI("Gravity Squares",new Font("Arial Black",Font.BOLD,50),Vector.NULL,ColorE.WHITE);
 
+    private double titleAnimationStep = 0;
+    private final StopWatch watchTwinkleStars = new StopWatch();
+
     public TitleScene() {
         super("Title");
         DoOnce.DEFAULT6.reset();
-        watch.start();
         SettingManager.getDefaultManager().loadAll();
     }
 
     @Override
     public void draw() {
-        //Draw Background
-        QuickDraw.drawRect(Vector.NULL,getSize(),new ColorE(25,25,25,255));
+        //Adds all elements and creates all stars
+        initElements();
 
+        //Draw Background
+        drawBackground(new ColorE(25,25,25,255));
+
+        super.draw();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        //Set size range caps
+        if (minSize.get() > maxSize.get()) minSize.set(maxSize.get());
+
+        //Twinkle Stars
+        watchTwinkleStars.start();
+        Random random = new Random();
+        if (watchTwinkleStars.hasTimePassedS(.25)) {
+            for (ElementUI element : getElements()) {
+                if (element instanceof PhysicsRectangle phys)
+                    phys.getRectangle().setColor(new ColorE(255, random.nextInt(125, 255), 100, 255));
+            }
+            watchTwinkleStars.restart();
+        }
+
+        double yOffset = -40;
+
+        //Set Title Pos
+        title.setPos(getSize().getMultiplied(.5d).getAdded(title.getSize().getMultiplied(-.5)).getAdded(0,yOffset));
+        title.setPos(title.getPos().getAdded(new Vector(0,Math.sin(titleAnimationStep) * 8)));
+        titleAnimationStep += 0.05;
+        if (titleAnimationStep >= Math.PI*2) titleAnimationStep = 0;
+
+        //Set Button Pos
+        buttonStart.setPos(getSize().getMultiplied(.5d).getAdded(buttonStart.getSize().getMultiplied(-.5)).getAdded(0,title.getFont().getSize() + 30).getAdded(0,yOffset));
+    }
+
+    private void initElements() {
         DoOnce.DEFAULT6.run(() -> {
             //Create Stars
             Random random = new Random();
@@ -64,42 +103,7 @@ public class TitleScene extends Scene {
             }
 
             //Add Widgets
-            addElements(button,title,squareCountSlider,minSizeSlider,maxSizeSlider,bigSquareToggle,wallBounceToggle);
+            addElements(buttonStart,title, sliderSquareCount, sliderMinSize, sliderMaxSize, toggleBigSquare, toggleDoWallBounce, toggleDoCollisions);
         });
-
-        super.draw();
-    }
-
-    private double step = 0;
-    private final StopWatch watch = new StopWatch();
-
-    @Override
-    public void tick() {
-        super.tick();
-
-        //Set size range caps
-        if (minSize.get() > maxSize.get()) minSize.set(maxSize.get());
-
-        //Twinkle Stars
-        Random random = new Random();
-        if (watch.hasTimePassedS(.25)) {
-            for (ElementUI element : getElements()) {
-                if (element instanceof PhysicsRectangle phys) {
-                    phys.getRectangle().setColor(new ColorE(255, random.nextInt(125, 255), 100, 255));
-                }
-            }
-            watch.restart();
-        }
-
-        double yOffset = -40;
-
-        //Set Title Pos
-        title.setPos(getSize().getMultiplied(.5d).getAdded(title.getSize().getMultiplied(-.5)).getAdded(0,yOffset));
-        title.setPos(title.getPos().getAdded(new Vector(0,Math.sin(step) * 8)));
-        step += 0.05;
-        if (step >= Math.PI*2) step = 0;
-
-        //Set Button Pos
-        button.setPos(getSize().getMultiplied(.5d).getAdded(button.getSize().getMultiplied(-.5)).getAdded(0,title.getFont().getSize() + 30).getAdded(0,yOffset));
     }
 }
