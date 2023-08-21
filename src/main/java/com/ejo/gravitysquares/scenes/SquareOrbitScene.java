@@ -7,7 +7,6 @@ import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
 import com.ejo.glowui.util.Key;
 import com.ejo.glowui.util.QuickDraw;
-import com.ejo.gravitysquares.PhysicsUtil;
 import com.ejo.gravitysquares.objects.PhysicsRectangle;
 import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.misc.ColorE;
@@ -65,6 +64,9 @@ public class SquareOrbitScene extends Scene {
         //Set exit button to top right corner
         buttonX.setPos(new Vector(getSize().getX(),0).getAdded(-buttonX.getSize().getX(),0));
 
+        //Updates Star Positions on window resize
+        updateStarPositionsOnResize();
+
         //Draw all screen objects
         super.draw();
 
@@ -81,7 +83,8 @@ public class SquareOrbitScene extends Scene {
         initObjectPositions();
 
         //Calculate and set the forces on each physics rectangle
-        PhysicsUtil.calculateGravityForcesAndCollisions(this, getPhysicsSquares(), 1, doWallBounce, doCollisions);
+        for (PhysicsRectangle rect : getPhysicsSquares())
+            rect.calculateGravityForceAndCollide(this,getPhysicsSquares(),1,doWallBounce,doCollisions);
 
         //Calculate the forces/accelerations. Reset's the added forces after acceleration calculation
         super.tick();
@@ -118,6 +121,17 @@ public class SquareOrbitScene extends Scene {
                 PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())),new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
                 obj.setDisabled(true);
                 addElements(obj);
+            }
+        });
+    }
+
+    private void updateStarPositionsOnResize() {
+        getWindow().doOnResize.run(() -> {
+            Random random = new Random();
+            for (ElementUI el : getElements()) {
+                if (el instanceof PhysicsRectangle rect && rect.isDisabled() && rect.shouldRender()) {
+                    rect.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())));
+                }
             }
         });
     }
