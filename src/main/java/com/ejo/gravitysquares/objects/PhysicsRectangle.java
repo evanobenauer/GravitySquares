@@ -33,19 +33,7 @@ public class PhysicsRectangle extends PhysicsDraggableUI {
 
                     //Do Object Collisions
                     if (doCollisions && areObjectsColliding(this,otherObject)) {
-                        setMass(getMass() + otherObject.getMass());
-
-                        double weight = getMass() / (otherObject.getMass() + getMass());
-                        setCenter(getCenter().getMultiplied(weight).getAdded(otherObject.getCenter().getMultiplied(1 - weight)));
-                        setVelocity(getVelocity().getMultiplied(weight).getAdded(otherObject.getVelocity().getMultiplied(1 - weight)));
-
-                        double radius = Math.pow(getMass(), (double) 1 /3);
-                        getRectangle().setSize(new Vector(radius,radius));
-
-                        getRectangle().setColor(new ColorE((int)(getColor().getRed() * weight + otherObject.getColor().getRed() * (1-weight)),(int)(getColor().getGreen() * weight + otherObject.getColor().getGreen() * (1-weight)),(int)(getColor().getBlue() * weight + otherObject.getColor().getBlue() * (1-weight))));
-
-                        otherObject.setDisabled(true);
-                        otherObject.setEnabled(false);
+                        doCollision(this,otherObject);
                         continue;
                     }
 
@@ -59,9 +47,25 @@ public class PhysicsRectangle extends PhysicsDraggableUI {
             setNetForce(gravityForce);
     }
 
-    private static boolean areObjectsColliding(PhysicsObjectUI forceObject, PhysicsObjectUI otherObject) {
+    private boolean areObjectsColliding(PhysicsObjectUI forceObject, PhysicsObjectUI otherObject) {
         double objectDistance = forceObject.getCenter().getAdded(otherObject.getCenter().getMultiplied(-1)).getMagnitude();
         return objectDistance <= ((PhysicsRectangle) forceObject).getRectangle().getSize().getX()/2 + ((PhysicsRectangle) otherObject).getRectangle().getSize().getX()/2;
+    }
+
+    private void doCollision(PhysicsRectangle object1, PhysicsRectangle object2) {
+        object1.setMass(object1.getMass() + object2.getMass());
+
+        double weight = object1.getMass() / (object2.getMass() + object1.getMass());
+        object1.setCenter(object1.getCenter().getMultiplied(weight).getAdded(object2.getCenter().getMultiplied(1 - weight)));
+        object1.setVelocity(object1.getVelocity().getMultiplied(weight).getAdded(object2.getVelocity().getMultiplied(1 - weight)));
+
+        double radius = Math.pow(object1.getMass(), (double) 1 /3);
+        object1.getRectangle().setSize(new Vector(radius,radius));
+
+        object1.getRectangle().setColor(new ColorE((int)(object1.getColor().getRed() * weight + object2.getColor().getRed() * (1-weight)),(int)(object1.getColor().getGreen() * weight + object2.getColor().getGreen() * (1-weight)),(int)(object1.getColor().getBlue() * weight + object2.getColor().getBlue() * (1-weight))));
+
+        object2.setDisabled(true);
+        object2.setEnabled(false);
     }
 
     public void doBounce(Scene scene) {

@@ -49,16 +49,18 @@ public class TitleScene extends Scene {
         SettingManager.getDefaultManager().loadAll();
     }
 
+
     @Override
     public void draw() {
-        //Adds all elements and creates all stars
         initElements();
-
-        //Updates Star Positions on window resize
         updateStarPositionsOnResize();
 
-        //Draw Background
         drawBackground(new ColorE(25, 25, 25, 255));
+
+        //Setup title and start button
+        double yOffset = -40;
+        updateTitle(yOffset);
+        buttonStart.setPos(getSize().getMultiplied(.5d).getAdded(buttonStart.getSize().getMultiplied(-.5)).getAdded(0, title.getFont().getSize() + 30).getAdded(0, yOffset));
 
         super.draw();
     }
@@ -70,7 +72,36 @@ public class TitleScene extends Scene {
         //Set size range caps
         if (minSize.get() > maxSize.get()) minSize.set(maxSize.get());
 
-        //Twinkle Stars
+        twinkleStars();
+    }
+
+
+    private void initElements() {
+        DoOnce.DEFAULT6.run(() -> {
+            addStars();
+            addElements(buttonStart, title, sliderSquareCount, sliderMinSize, sliderMaxSize, toggleBigSquare, toggleDoWallBounce, toggleDoCollisions);
+        });
+    }
+
+    private void updateTitle(double yOffset) {
+        title.setPos(getSize().getMultiplied(.5d).getAdded(title.getSize().getMultiplied(-.5)).getAdded(0, yOffset));
+        title.setPos(title.getPos().getAdded(new Vector(0, Math.sin(titleAnimationStep) * 8)));
+        titleAnimationStep += 0.05;
+        if (titleAnimationStep >= Math.PI * 2) titleAnimationStep = 0;
+    }
+
+    private void addStars() {
+        Random random = new Random();
+        for (int i = 0; i < 100; i++) {
+            ColorE color = new ColorE(255, random.nextInt(125, 255), 100, 255);
+            PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0, getSize().getX()), random.nextDouble(0, getWindow().getSize().getY())), new Vector(1, 1), color), 1, Vector.NULL, Vector.NULL);
+            obj.setDisabled(true);
+            obj.setTicking(false);
+            addElements(obj);
+        }
+    }
+
+    private void twinkleStars() {
         watchTwinkleStars.start();
         Random random = new Random();
         if (watchTwinkleStars.hasTimePassedS(.25)) {
@@ -80,33 +111,6 @@ public class TitleScene extends Scene {
             }
             watchTwinkleStars.restart();
         }
-
-        //Set Title Pos
-        double yOffset = -40;
-        title.setPos(getSize().getMultiplied(.5d).getAdded(title.getSize().getMultiplied(-.5)).getAdded(0, yOffset));
-        title.setPos(title.getPos().getAdded(new Vector(0, Math.sin(titleAnimationStep) * 8)));
-        titleAnimationStep += 0.05;
-        if (titleAnimationStep >= Math.PI * 2) titleAnimationStep = 0;
-
-        //Set Button Pos
-        buttonStart.setPos(getSize().getMultiplied(.5d).getAdded(buttonStart.getSize().getMultiplied(-.5)).getAdded(0, title.getFont().getSize() + 30).getAdded(0, yOffset));
-    }
-
-    private void initElements() {
-        DoOnce.DEFAULT6.run(() -> {
-            //Create Stars
-            Random random = new Random();
-            for (int i = 0; i < 100; i++) {
-                ColorE color = new ColorE(255, random.nextInt(125, 255), 100, 255);
-                PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0, getSize().getX()), random.nextDouble(0, getWindow().getSize().getY())), new Vector(1, 1), color), 1, Vector.NULL, Vector.NULL);
-                obj.setDisabled(true);
-                obj.setTicking(false);
-                addElements(obj);
-            }
-
-            //Add Widgets
-            addElements(buttonStart, title, sliderSquareCount, sliderMinSize, sliderMaxSize, toggleBigSquare, toggleDoWallBounce, toggleDoCollisions);
-        });
     }
 
     private void updateStarPositionsOnResize() {
