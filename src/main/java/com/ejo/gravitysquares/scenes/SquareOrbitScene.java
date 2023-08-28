@@ -7,6 +7,7 @@ import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
 import com.ejo.glowui.util.Key;
 import com.ejo.glowui.util.QuickDraw;
+import com.ejo.gravitysquares.PhysicsUtil;
 import com.ejo.gravitysquares.objects.PhysicsRectangle;
 import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.misc.ColorE;
@@ -56,8 +57,10 @@ public class SquareOrbitScene extends Scene {
     public void tick() {
         initObjectPositions();
 
-        for (PhysicsRectangle rect : getPhysicsSquares())
-            rect.calculateGravityForceAndCollide(this,getPhysicsSquares(),1,doWallBounce,doCollisions);
+        for (PhysicsRectangle rect : getPhysicsSquares()) {
+            if (rect.isDisabled()) continue;
+            rect.setNetForce(PhysicsUtil.calculateGravityForceAndCollide(this, rect,getPhysicsSquares(), 1, doWallBounce, doCollisions));
+        }
 
         //Calculate the forces/accelerations. Reset's the added forces after acceleration calculation
         super.tick();

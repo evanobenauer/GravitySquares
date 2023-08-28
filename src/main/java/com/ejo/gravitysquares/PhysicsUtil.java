@@ -17,26 +17,35 @@ public class PhysicsUtil {
     public static double g = 9.8;
     public static double G = 6.67 * Math.pow(10, -11);
 
-    public static void calculateGravityForces(ArrayList<PhysicsObjectUI> objects) {
-        for (PhysicsObjectUI forcedObject : objects) {
-            if (forcedObject.isDisabled()) continue;
-            VectorMod gravityForce = Vector.NULL.getMod();
+    public static Vector calculateGravityForceAndCollide(Scene scene, PhysicsRectangle object, ArrayList<PhysicsRectangle> physicsObjects, double G, boolean doWallBounce, boolean doCollisions) {
+        if (object.isDisabled()) return Vector.NULL;
+        if (doWallBounce) object.doBounce(scene);
 
-            //Calculate the force on the object from every other object in the list
-            for (PhysicsObjectUI otherObject : objects) {
-                if (!forcedObject.equals(otherObject) && !otherObject.isDisabled()) {
-                    Vector objectDistance = calculateVectorBetweenObjects(otherObject, forcedObject);
-                    Vector objForce = objectDistance
-                            .getUnitVector()
-                            .getMultiplied(G * forcedObject.getMass() * otherObject.getMass() / Math.pow(objectDistance.getMagnitude(), 2));
+        VectorMod gravityForce = Vector.NULL.getMod();
 
-                    if (!(String.valueOf(objForce.getMagnitude())).equals("NaN"))
-                        gravityForce.add(objForce);
+        //Calculate the force on obj from every other object in the list
+        for (PhysicsRectangle otherObject : physicsObjects) {
+            if (!object.equals(otherObject) && !otherObject.isDisabled()) {
+
+                //Do Object Collisions
+                if (doCollisions && PhysicsUtil.areObjectsColliding(object,otherObject)) {
+                    object.doCollision(otherObject);
+                    continue;
                 }
-            }
 
-            forcedObject.setNetForce(forcedObject.getNetForce().getAdded(gravityForce));
+                Vector objectDistance = PhysicsUtil.calculateVectorBetweenObjects(otherObject, object);
+                Vector gravityFromOtherObject = objectDistance.getUnitVector()
+                        .getMultiplied(G * object.getMass() * otherObject.getMass() / Math.pow(objectDistance.getMagnitude(), 2));
+
+                if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
+            }
         }
+        return gravityForce;
+    }
+
+    public static boolean areObjectsColliding(PhysicsObjectUI forceObject, PhysicsObjectUI otherObject) {
+        double objectDistance = forceObject.getCenter().getAdded(otherObject.getCenter().getMultiplied(-1)).getMagnitude();
+        return objectDistance <= ((PhysicsRectangle) forceObject).getRectangle().getSize().getX()/2 + ((PhysicsRectangle) otherObject).getRectangle().getSize().getX()/2;
     }
 
     public static void calculateSurfaceGravity(ArrayList<PhysicsObjectUI> physicsObjects) {
