@@ -27,13 +27,15 @@ public class SquareOrbitScene extends Scene {
 
     private final boolean doWallBounce;
     private final boolean doCollisions;
+    private final boolean drawFieldLines;
 
-    public SquareOrbitScene(int squareCount, double sizeMin, double sizeMax, boolean bigSquare, boolean doWallBounce, boolean doCollisions) {
+    public SquareOrbitScene(int squareCount, double sizeMin, double sizeMax, boolean bigSquare, boolean doWallBounce, boolean doCollisions, boolean drawFieldLines) {
         super("Orbit Screen");
         DoOnce.DEFAULT1.reset();
 
         this.doWallBounce = doWallBounce;
         this.doCollisions = doCollisions;
+        this.drawFieldLines = drawFieldLines;
 
         addStars();
         addPhysicsSquares(squareCount,sizeMin,sizeMax);
@@ -48,7 +50,7 @@ public class SquareOrbitScene extends Scene {
 
         updateStarPositionsOnResize();
 
-        drawFieldLines(.01,getPhysicsSquares());
+        if (this.drawFieldLines) drawFieldLines(.05,getPhysicsSquares());
 
         //Draw all screen objects
         super.draw();
@@ -110,7 +112,7 @@ public class SquareOrbitScene extends Scene {
             PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(Vector.NULL,new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
             obj.setDisabled(true);
             obj.setTicking(false);
-            addElements(obj);
+            if (!this.drawFieldLines) addElements(obj);
         }
     }
 
@@ -152,14 +154,13 @@ public class SquareOrbitScene extends Scene {
         return rectangles;
     }
 
-    //TODO: Finish Field Line Drawing, Add an option to the title screen
     private void drawFieldLines(double lineDensity, ArrayList<PhysicsRectangle> physicsRectangles) {
         int inverseDensity = (int) (1/lineDensity);
         int windowWidth = (int)getWindow().getSize().getX();
         int windowHeight = (int)getWindow().getSize().getY();
 
-        for (int x = 0; x < windowWidth / inverseDensity; x++) {
-            for (int y = 0; y < windowHeight / inverseDensity; y++) {
+        for (int x = 0; x < windowWidth / inverseDensity + 1; x++) {
+            for (int y = 0; y < windowHeight / inverseDensity + 1; y++) {
                 VectorMod gravityForce = Vector.NULL.getMod();
                 for (PhysicsRectangle otherObject : physicsRectangles) {
                     if (!otherObject.isDisabled()) {
@@ -171,7 +172,7 @@ public class SquareOrbitScene extends Scene {
                         if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
                     }
                 }
-                LineUI lineUI = new LineUI(new Vector(x,y).getMultiplied(inverseDensity),gravityForce.getTheta(),10,ColorE.WHITE, LineUI.Type.PLAIN,1);
+                LineUI lineUI = new LineUI(new Vector(x,y).getMultiplied(inverseDensity),gravityForce.getUnitVector().getMultiplied(Math.min(Math.max(gravityForce.getMagnitude(),.1),1)*10).getAdded(new Vector(x,y).getMultiplied(inverseDensity)),ColorE.WHITE.alpha(100), LineUI.Type.PLAIN,.5);
                 lineUI.draw();
             }
         }

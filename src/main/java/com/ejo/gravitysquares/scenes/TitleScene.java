@@ -24,6 +24,7 @@ public class TitleScene extends Scene {
     private final Setting<Boolean> bigSquare = new Setting<>("bigSquare", false);
     private final Setting<Boolean> doWallBounce = new Setting<>("doBounce", true);
     private final Setting<Boolean> doCollisions = new Setting<>("doCollisions", false);
+    private final Setting<Boolean> drawFieldLines = new Setting<>("drawFieldLines", false);
 
     private final SliderUI<Integer> sliderSquareCount = new SliderUI<>("Square Count", new Vector(10, 10), new Vector(300, 20), ColorE.BLUE, squareCount, 0, 500, 1, SliderUI.Type.INTEGER, true);
     private final SliderUI<Double> sliderMinSize = new SliderUI<>("Min Size", new Vector(10, 40), new Vector(300, 20), ColorE.BLUE, minSize, 0.1d, 50d, .1, SliderUI.Type.FLOAT, true);
@@ -32,9 +33,10 @@ public class TitleScene extends Scene {
     private final ToggleUI toggleDoWallBounce = new ToggleUI("Do Wall Bounce", new Vector(10, 100), new Vector(300, 20), ColorE.BLUE, doWallBounce);
     private final ToggleUI toggleDoCollisions = new ToggleUI("Do Collisions", new Vector(10, 130), new Vector(300, 20), ColorE.BLUE, doCollisions);
     private final ToggleUI toggleBigSquare = new ToggleUI("Big Square", new Vector(10, 160), new Vector(300, 20), ColorE.BLUE, bigSquare);
+    private final ToggleUI toggleDrawFieldLines = new ToggleUI("Draw Field Lines", new Vector(10, 190), new Vector(300, 20), ColorE.BLUE, drawFieldLines);
 
     private final ButtonUI buttonStart = new ButtonUI("Start!", Vector.NULL, new Vector(200, 60), new ColorE(0, 125, 200, 200), ButtonUI.MouseButton.LEFT, () -> {
-        getWindow().setScene(new SquareOrbitScene(squareCount.get(), minSize.get(), maxSize.get(), bigSquare.get(), doWallBounce.get(), doCollisions.get()));
+        getWindow().setScene(new SquareOrbitScene(squareCount.get(), minSize.get(), maxSize.get(), bigSquare.get(), doWallBounce.get(), doCollisions.get(),drawFieldLines.get()));
         SettingManager.getDefaultManager().saveAll();
     });
 
@@ -79,7 +81,7 @@ public class TitleScene extends Scene {
     private void initElements() {
         DoOnce.DEFAULT6.run(() -> {
             addStars();
-            addElements(buttonStart, title, sliderSquareCount, sliderMinSize, sliderMaxSize, toggleBigSquare, toggleDoWallBounce, toggleDoCollisions);
+            addElements(buttonStart, title, sliderSquareCount, sliderMinSize, sliderMaxSize, toggleBigSquare, toggleDoWallBounce, toggleDoCollisions,toggleDrawFieldLines);
         });
     }
 
