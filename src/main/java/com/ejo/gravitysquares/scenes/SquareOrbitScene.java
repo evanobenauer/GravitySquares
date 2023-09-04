@@ -1,8 +1,11 @@
 package com.ejo.gravitysquares.scenes;
 
+import com.ejo.glowlib.math.Angle;
+import com.ejo.glowlib.math.VectorMod;
 import com.ejo.glowlib.misc.DoOnce;
 import com.ejo.glowui.scene.Scene;
 import com.ejo.glowui.scene.elements.ElementUI;
+import com.ejo.glowui.scene.elements.shape.LineUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
 import com.ejo.glowui.util.Key;
@@ -44,6 +47,8 @@ public class SquareOrbitScene extends Scene {
         buttonX.setPos(new Vector(getSize().getX(),0).getAdded(-buttonX.getSize().getX(),0));
 
         updateStarPositionsOnResize();
+
+        drawFieldLines(.01,getPhysicsSquares());
 
         //Draw all screen objects
         super.draw();
@@ -145,6 +150,31 @@ public class SquareOrbitScene extends Scene {
             rectangles.add(rectangle);
         }
         return rectangles;
+    }
+
+    //TODO: Finish Field Line Drawing, Add an option to the title screen
+    private void drawFieldLines(double lineDensity, ArrayList<PhysicsRectangle> physicsRectangles) {
+        int inverseDensity = (int) (1/lineDensity);
+        int windowWidth = (int)getWindow().getSize().getX();
+        int windowHeight = (int)getWindow().getSize().getY();
+
+        for (int x = 0; x < windowWidth / inverseDensity; x++) {
+            for (int y = 0; y < windowHeight / inverseDensity; y++) {
+                VectorMod gravityForce = Vector.NULL.getMod();
+                for (PhysicsRectangle otherObject : physicsRectangles) {
+                    if (!otherObject.isDisabled()) {
+
+                        Vector objectDistance = PhysicsUtil.calculateVectorBetweenPoints(otherObject.getCenter(), new Vector(x,y).getMultiplied(inverseDensity));
+                        Vector gravityFromOtherObject = objectDistance.getUnitVector()
+                                .getMultiplied(otherObject.getMass() / Math.pow(objectDistance.getMagnitude(), 2));
+
+                        if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
+                    }
+                }
+                LineUI lineUI = new LineUI(new Vector(x,y).getMultiplied(inverseDensity),gravityForce.getTheta(),10,ColorE.WHITE, LineUI.Type.PLAIN,1);
+                lineUI.draw();
+            }
+        }
     }
 
 }
