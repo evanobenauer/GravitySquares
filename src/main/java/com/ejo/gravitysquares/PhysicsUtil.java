@@ -1,16 +1,12 @@
 package com.ejo.gravitysquares;
 
-import com.ejo.glowlib.math.MathE;
 import com.ejo.glowlib.math.VectorMod;
-import com.ejo.glowlib.misc.ColorE;
 import com.ejo.glowui.scene.Scene;
-import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.shape.physics.PhysicsObjectUI;
 import com.ejo.glowlib.math.Vector;
 import com.ejo.gravitysquares.objects.PhysicsRectangle;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 public class PhysicsUtil {
 
@@ -28,20 +24,24 @@ public class PhysicsUtil {
             if (!object.equals(otherObject) && !otherObject.isDisabled()) {
 
                 //Do Object Collisions
-                if (doCollisions && PhysicsUtil.areObjectsColliding(object,otherObject)) {
+                if (doCollisions && areObjectsColliding(object,otherObject)) {
                     object.doCollision(otherObject);
                     continue;
                 }
 
-                Vector objectDistance = PhysicsUtil.calculateVectorBetweenObjects(otherObject, object);
-                Vector gravityFromOtherObject = objectDistance.getUnitVector()
-                        .getMultiplied(G * object.getMass() * otherObject.getMass() / Math.pow(objectDistance.getMagnitude(), 2));
+                Vector gravityForceFromOtherObject = calculateGravitationalField(G,otherObject,object.getCenter()).getMultiplied(object.getMass());
 
-                if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
+                if (!(String.valueOf(gravityForceFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityForceFromOtherObject);
             }
         }
         return gravityForce;
     }
+
+    public static Vector calculateGravitationalField(double G, PhysicsObjectUI object, Vector location) {
+        Vector distance = PhysicsUtil.calculateVectorBetweenPoints(object.getCenter(),location);
+        return distance.getUnitVector().getMultiplied(G * object.getMass() / Math.pow(distance.getMagnitude(), 2));
+    }
+
 
     public static boolean areObjectsColliding(PhysicsObjectUI forceObject, PhysicsObjectUI otherObject) {
         double objectDistance = forceObject.getCenter().getAdded(otherObject.getCenter().getMultiplied(-1)).getMagnitude();

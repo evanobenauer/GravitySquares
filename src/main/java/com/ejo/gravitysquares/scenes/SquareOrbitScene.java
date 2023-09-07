@@ -165,9 +165,7 @@ public class SquareOrbitScene extends Scene {
                 for (PhysicsRectangle otherObject : physicsRectangles) {
                     if (!otherObject.isDisabled()) {
 
-                        Vector objectDistance = PhysicsUtil.calculateVectorBetweenPoints(otherObject.getCenter(), new Vector(x,y).getMultiplied(inverseDensity));
-                        Vector gravityFromOtherObject = objectDistance.getUnitVector()
-                                .getMultiplied(otherObject.getMass() / Math.pow(objectDistance.getMagnitude(), 2));
+                        Vector gravityFromOtherObject = PhysicsUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity));
 
                         if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
                     }
