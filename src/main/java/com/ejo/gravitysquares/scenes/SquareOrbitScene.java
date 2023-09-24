@@ -1,6 +1,5 @@
 package com.ejo.gravitysquares.scenes;
 
-import com.ejo.glowlib.math.Angle;
 import com.ejo.glowlib.math.VectorMod;
 import com.ejo.glowlib.misc.DoOnce;
 import com.ejo.glowui.scene.Scene;
@@ -66,7 +65,18 @@ public class SquareOrbitScene extends Scene {
 
         for (PhysicsRectangle rect : getPhysicsSquares()) {
             if (rect.isDisabled()) continue;
-            rect.setNetForce(PhysicsUtil.calculateGravityForceAndCollide(this, rect,getPhysicsSquares(), 1, doWallBounce, doCollisions));
+
+            //Do Collisions
+            for (PhysicsRectangle otherObject : getPhysicsSquares()) {
+                if (!rect.equals(otherObject) && !otherObject.isDisabled()) {
+                    if (doCollisions && PhysicsUtil.areObjectsColliding(rect, otherObject)) {
+                        rect.doCollision(otherObject);
+                    }
+                }
+            }
+
+            //Set Gravity Force
+            rect.setNetForce(PhysicsUtil.calculateGravityForce(this, rect,getPhysicsSquares(), 1, doWallBounce, doCollisions));
         }
 
         //Calculate the forces/accelerations. Reset's the added forces after acceleration calculation
@@ -148,8 +158,8 @@ public class SquareOrbitScene extends Scene {
 
     private ArrayList<PhysicsRectangle> getPhysicsSquares() {
         ArrayList<PhysicsRectangle> rectangles = new ArrayList<>();
-        for (ElementUI elementUI : getElements()) if (elementUI instanceof PhysicsRectangle rectangle) {
-            rectangles.add(rectangle);
+        for (ElementUI elementUI : getElements()) {
+            if (elementUI instanceof PhysicsRectangle rectangle) rectangles.add(rectangle);
         }
         return rectangles;
     }
@@ -164,9 +174,7 @@ public class SquareOrbitScene extends Scene {
                 VectorMod gravityForce = Vector.NULL.getMod();
                 for (PhysicsRectangle otherObject : physicsRectangles) {
                     if (!otherObject.isDisabled()) {
-
                         Vector gravityFromOtherObject = PhysicsUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity));
-
                         if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
                     }
                 }

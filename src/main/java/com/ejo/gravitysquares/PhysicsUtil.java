@@ -37,7 +37,25 @@ public class PhysicsUtil {
         return gravityForce;
     }
 
-    public static Vector calculateGravitationalField(double G, PhysicsObjectUI object, Vector location) {
+    public static Vector calculateGravityForce(Scene scene, PhysicsRectangle object, ArrayList<PhysicsRectangle> physicsObjects, double G, boolean doWallBounce, boolean doCollisions) {
+        if (object.isDisabled()) return Vector.NULL;
+        if (doWallBounce) object.doBounce(scene);
+
+        VectorMod gravityForce = Vector.NULL.getMod();
+
+        //Calculate the force on obj from every other object in the list
+        for (PhysicsRectangle otherObject : physicsObjects) {
+            if (!object.equals(otherObject) && !otherObject.isDisabled()) {
+
+                Vector gravityForceFromOtherObject = calculateGravitationalField(G,otherObject,object.getCenter()).getMultiplied(object.getMass());
+
+                if (!(String.valueOf(gravityForceFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityForceFromOtherObject);
+            }
+        }
+        return gravityForce;
+    }
+
+        public static Vector calculateGravitationalField(double G, PhysicsObjectUI object, Vector location) {
         Vector distance = PhysicsUtil.calculateVectorBetweenPoints(object.getCenter(),location);
         return distance.getUnitVector().getMultiplied(G * object.getMass() / Math.pow(distance.getMagnitude(), 2));
     }
