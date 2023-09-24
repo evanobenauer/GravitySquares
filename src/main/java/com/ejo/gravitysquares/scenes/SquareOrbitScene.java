@@ -67,16 +67,18 @@ public class SquareOrbitScene extends Scene {
             if (rect.isDisabled()) continue;
 
             //Do Collisions
-            for (PhysicsRectangle otherObject : getPhysicsSquares()) {
-                if (!rect.equals(otherObject) && !otherObject.isDisabled()) {
-                    if (doCollisions && PhysicsUtil.areObjectsColliding(rect, otherObject)) {
-                        rect.doCollision(otherObject);
-                    }
+            if (doCollisions) {
+                for (PhysicsRectangle otherObject : getPhysicsSquares()) {
+                    if (rect.equals(otherObject) || otherObject.isDisabled()) continue;
+                    if (PhysicsUtil.areObjectsColliding(rect, otherObject)) rect.doCollision(otherObject);
                 }
             }
 
+            //Do Wall Bounce
+            if (doWallBounce) rect.doBounce(this);
+
             //Set Gravity Force
-            rect.setNetForce(PhysicsUtil.calculateGravityForce(this, rect,getPhysicsSquares(), 1, doWallBounce, doCollisions));
+            rect.setNetForce(PhysicsUtil.calculateGravityForce(rect,getPhysicsSquares(), 1));
         }
 
         //Calculate the forces/accelerations. Reset's the added forces after acceleration calculation
