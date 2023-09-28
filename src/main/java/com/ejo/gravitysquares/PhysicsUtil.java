@@ -38,16 +38,17 @@ public class PhysicsUtil {
         return gravityForce;
     }
 
-    public static Vector calculateGravityForce(PhysicsRectangle object, ArrayList<PhysicsRectangle> physicsObjects, double G) {
+    public static <T extends PhysicsObjectUI> Vector calculateGravityForce(PhysicsObjectUI object, ArrayList<T> physicsObjects, double G) {
         if (object.isDisabled()) return Vector.NULL;
 
         VectorMod gravityForce = Vector.NULL.getMod();
 
         //Calculate the force on obj from every other object in the list
-        for (PhysicsRectangle otherObject : physicsObjects) {
+        for (PhysicsObjectUI otherObject : physicsObjects) {
             if (!object.equals(otherObject) && !otherObject.isDisabled()) {
                 Vector gravityForceFromOtherObject = calculateGravitationalField(G,otherObject,object.getCenter()).getMultiplied(object.getMass());
-                if (!(String.valueOf(gravityForceFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityForceFromOtherObject);
+                if (!(String.valueOf(gravityForceFromOtherObject.getMagnitude())).equals("NaN"))
+                    gravityForce.add(gravityForceFromOtherObject);
             }
         }
         return gravityForce;
@@ -61,7 +62,9 @@ public class PhysicsUtil {
 
     public static boolean areObjectsColliding(PhysicsObjectUI forceObject, PhysicsObjectUI otherObject) {
         double objectDistance = forceObject.getCenter().getAdded(otherObject.getCenter().getMultiplied(-1)).getMagnitude();
-        return objectDistance <= ((PhysicsRectangle) forceObject).getRectangle().getSize().getX()/2 + ((PhysicsRectangle) otherObject).getRectangle().getSize().getX()/2;
+        if (forceObject instanceof PhysicsRectangle forcedRect && otherObject instanceof PhysicsRectangle otherRect)
+            return objectDistance <= forcedRect.getRectangle().getSize().getX() / 2 + otherRect.getRectangle().getSize().getX() / 2;
+        return false;
     }
 
     public static void calculateSurfaceGravity(ArrayList<PhysicsObjectUI> physicsObjects) {
