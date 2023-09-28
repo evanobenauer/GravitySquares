@@ -22,16 +22,15 @@ public class PhysicsRectangle extends PhysicsDraggableUI {
     }
 
     public void doCollision(PhysicsRectangle object) {
-        setMass(getMass() + object.getMass());
-
         double weight = getMass() / (object.getMass() + getMass());
         setCenter(getCenter().getMultiplied(weight).getAdded(object.getCenter().getMultiplied(1 - weight)));
         setVelocity(getVelocity().getMultiplied(weight).getAdded(object.getVelocity().getMultiplied(1 - weight)));
 
+        getRectangle().setColor(new ColorE((int)(getColor().getRed() * weight + object.getColor().getRed() * (1-weight)),(int)(getColor().getGreen() * weight + object.getColor().getGreen() * (1-weight)),(int)(getColor().getBlue() * weight + object.getColor().getBlue() * (1-weight))));
+
+        setMass(getMass() + object.getMass());
         double radius = Math.pow(getMass(), (double) 1 /3);
         getRectangle().setSize(new Vector(radius,radius));
-
-        getRectangle().setColor(new ColorE((int)(getColor().getRed() * weight + object.getColor().getRed() * (1-weight)),(int)(getColor().getGreen() * weight + object.getColor().getGreen() * (1-weight)),(int)(getColor().getBlue() * weight + object.getColor().getBlue() * (1-weight))));
 
         object.setDisabled(true);
         object.setEnabled(false);
