@@ -1,16 +1,18 @@
-package com.ejo.gravitysquares.scenes;
+package com.ejo.gravityshapes.scenes;
 
+import com.ejo.glowlib.math.Angle;
 import com.ejo.glowlib.math.VectorMod;
 import com.ejo.glowlib.misc.DoOnce;
 import com.ejo.glowui.scene.Scene;
 import com.ejo.glowui.scene.elements.ElementUI;
 import com.ejo.glowui.scene.elements.shape.LineUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
+import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
 import com.ejo.glowui.util.Key;
 import com.ejo.glowui.util.QuickDraw;
-import com.ejo.gravitysquares.PhysicsUtil;
-import com.ejo.gravitysquares.objects.PhysicsRectangle;
+import com.ejo.gravityshapes.PhysicsUtil;
+import com.ejo.gravityshapes.objects.PhysicsPolygon;
 import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.misc.ColorE;
 
@@ -18,18 +20,18 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class SquareOrbitScene extends Scene {
+public class GravityScene extends Scene {
 
     private final ButtonUI buttonX = new ButtonUI(Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255), ButtonUI.MouseButton.LEFT,() -> getWindow().setScene(new TitleScene()));
 
-    private PhysicsRectangle bigSquare = null;
+    private PhysicsPolygon bigObject = null;
 
     private final boolean doWallBounce;
     private final boolean doCollisions;
     private final boolean drawFieldLines;
 
-    public SquareOrbitScene(int squareCount, double sizeMin, double sizeMax, boolean bigSquare, boolean doWallBounce, boolean doCollisions, boolean drawFieldLines) {
-        super("Orbit Screen");
+    public GravityScene(int objectCount, double sizeMin, double sizeMax, boolean bigObject, boolean doWallBounce, boolean doCollisions, boolean drawFieldLines) {
+        super("Orbit Scene");
         DoOnce.DEFAULT1.reset();
 
         this.doWallBounce = doWallBounce;
@@ -37,8 +39,8 @@ public class SquareOrbitScene extends Scene {
         this.drawFieldLines = drawFieldLines;
 
         addStars();
-        addPhysicsSquares(squareCount,sizeMin,sizeMax);
-        if (bigSquare) addBigSquare(sizeMax);
+        addPhysicsObjects(objectCount,sizeMin,sizeMax);
+        if (bigObject) addBigObject(sizeMax);
         addElements(buttonX);
     }
 
@@ -49,36 +51,40 @@ public class SquareOrbitScene extends Scene {
 
         updateStarPositionsOnResize();
 
-        if (this.drawFieldLines) drawFieldLines(.05,getPhysicsSquares());
+        if (this.drawFieldLines) drawFieldLines(.05, getPhysicsObjects());
 
         //Draw all screen objects
         super.draw();
 
         //Draw X for Exit Button
         QuickDraw.drawText("X",new Font("Arial",Font.PLAIN,14), buttonX.getPos().getAdded(3,-2),ColorE.WHITE);
-        QuickDraw.drawFPSTPS(this,new Vector(1,1),10,false);
     }
 
     @Override
     public void tick() {
         initObjectPositions();
 
-        for (PhysicsRectangle rect : getPhysicsSquares()) {
-            if (rect.isDisabled()) continue;
+        for (PhysicsPolygon obj : getPhysicsObjects()) {
+            if (obj.isDisabled()) continue;
 
             //Do Collisions
             if (doCollisions) {
-                for (PhysicsRectangle otherObject : getPhysicsSquares()) {
-                    if (rect.equals(otherObject) || otherObject.isDisabled()) continue;
-                    if (PhysicsUtil.areObjectsColliding(rect, otherObject)) rect.doCollision(otherObject);
+                for (PhysicsPolygon otherObject : getPhysicsObjects()) {
+                    if (obj.equals(otherObject) || otherObject.isDisabled()) continue;
+                    if (PhysicsUtil.areObjectsColliding(obj, otherObject)) obj.doCollision(otherObject);
+                }
+            } else {
+                for (PhysicsPolygon otherObject : getPhysicsObjects()) {
+                    if (obj.equals(otherObject) || otherObject.isDisabled()) continue;
+                    if (PhysicsUtil.areObjectsColliding(obj,otherObject)) obj.spinObjectFromCollision(otherObject,.01);
                 }
             }
 
             //Do Wall Bounce
-            if (doWallBounce) rect.doBounce(this);
+            if (doWallBounce) obj.doBounce(this);
 
             //Set Gravity Force
-            rect.setNetForce(PhysicsUtil.calculateGravityForce(rect,getPhysicsSquares(), 1));
+            obj.setNetForce(PhysicsUtil.calculateGravityForce(obj, getPhysicsObjects(), 1));
         }
 
         //Calculate the forces/accelerations. Reset's the added forces after acceleration calculation
@@ -96,33 +102,35 @@ public class SquareOrbitScene extends Scene {
         if (key == Key.KEY_MINUS.getId() && action == Key.ACTION_PRESS) {
             getWindow().setMaxTPS(getWindow().getMaxTPS() - 5);
         }
+        if (key == Key.KEY_ESC.getId() && action == Key.ACTION_PRESS) {
+            buttonX.getAction().run();
+        }
     }
 
 
-    private void addPhysicsSquares(int squareCount, double sizeMin, double sizeMax) {
+    private void addPhysicsObjects(int objectCount, double sizeMin, double sizeMax) {
         Random random = new Random();
-        for (int i = 0; i < squareCount; i++) {
+        for (int i = 0; i < objectCount; i++) {
             double trueSize = (sizeMin == sizeMax) ? sizeMax : random.nextDouble(sizeMin, sizeMax);
             double startVelRange = 10;
             ColorE randomColor = new ColorE(random.nextInt(25,255),random.nextInt(25,255),random.nextInt(25,255),255);
-            addElements(new PhysicsRectangle(
-                    new RectangleUI(Vector.NULL, new Vector(trueSize,trueSize), randomColor), trueSize*trueSize*trueSize,
+            addElements(new PhysicsPolygon(
+                    new RegularPolygonUI(Vector.NULL, randomColor, trueSize, random.nextInt(3,8),new Angle(random.nextDouble(0,2*Math.PI))), (double) 4 /3*Math.PI*Math.pow(trueSize,3),
                     new Vector(random.nextDouble(-startVelRange,startVelRange),random.nextDouble(-startVelRange,startVelRange)), Vector.NULL));
         }
     }
 
-    private void addBigSquare(double sizeMax) {
+    private void addBigObject(double sizeMax) {
         int mul = 3;
-        addElements(this.bigSquare = new PhysicsRectangle(
-                new RectangleUI(Vector.NULL,new Vector(sizeMax,sizeMax).getMultiplied(mul),ColorE.YELLOW),
+        addElements(this.bigObject = new PhysicsPolygon(
+                new RegularPolygonUI(Vector.NULL,ColorE.YELLOW, sizeMax * mul,30,new Angle(0)),
                 sizeMax*sizeMax*sizeMax*mul*mul*mul,Vector.NULL,Vector.NULL));
     }
 
     private void addStars() {
         for (int i = 0; i < 100; i++) {
             ColorE color = new ColorE(255, 255, 255,255);
-            PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(Vector.NULL,new Vector(1,1), color), 1,Vector.NULL,Vector.NULL);
-            obj.setDisabled(true);
+            RectangleUI obj = new RectangleUI(Vector.NULL,new Vector(1,1), color);
             obj.setTicking(false);
             if (!this.drawFieldLines) addElements(obj);
         }
@@ -131,26 +139,29 @@ public class SquareOrbitScene extends Scene {
 
     private void initObjectPositions() {
         DoOnce.DEFAULT1.run(() -> {
-            //Sets the random positions of the stars AND the physics squares
-            setRandomSquarePositions();
+            setRandomObjectPositions();
 
-            //Set Big Square start in the middle
-            if (bigSquare != null) bigSquare.setPos(getSize().getMultiplied(.5).getAdded(bigSquare.getRectangle().getSize().getMultiplied(-.5)));
-
+            //Set Big Object start in the middle
+            if (bigObject != null) bigObject.setPos(getSize().getMultiplied(.5));
         });
     }
 
-    private void setRandomSquarePositions() {
+    private void setRandomObjectPositions() {
         Random random = new Random();
-        for (PhysicsRectangle obj : getPhysicsSquares())
+        for (PhysicsPolygon obj : getPhysicsObjects())
             obj.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getSize().getY())));
+        for (ElementUI el : getElements()) {
+            if (el instanceof RectangleUI rect && rect.shouldRender() && !rect.shouldTick()) {
+                rect.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())));
+            }
+        }
     }
 
     private void updateStarPositionsOnResize() {
         getWindow().doOnResize.run(() -> {
             Random random = new Random();
             for (ElementUI el : getElements()) {
-                if (el instanceof PhysicsRectangle rect && rect.isDisabled() && rect.shouldRender()) {
+                if (el instanceof RectangleUI rect && rect.shouldRender() && !rect.shouldTick()) {
                     rect.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())));
                 }
             }
@@ -158,15 +169,15 @@ public class SquareOrbitScene extends Scene {
     }
 
 
-    private ArrayList<PhysicsRectangle> getPhysicsSquares() {
-        ArrayList<PhysicsRectangle> rectangles = new ArrayList<>();
+    public ArrayList<PhysicsPolygon> getPhysicsObjects() {
+        ArrayList<PhysicsPolygon> rectangles = new ArrayList<>();
         for (ElementUI elementUI : getElements()) {
-            if (elementUI instanceof PhysicsRectangle rectangle) rectangles.add(rectangle);
+            if (elementUI instanceof PhysicsPolygon polygon) rectangles.add(polygon);
         }
         return rectangles;
     }
 
-    private void drawFieldLines(double lineDensity, ArrayList<PhysicsRectangle> physicsRectangles) {
+    private void drawFieldLines(double lineDensity, ArrayList<PhysicsPolygon> physicsPolygons) {
         int inverseDensity = (int) (1/lineDensity);
         int windowWidth = (int)getWindow().getSize().getX();
         int windowHeight = (int)getWindow().getSize().getY();
@@ -174,7 +185,7 @@ public class SquareOrbitScene extends Scene {
         for (int x = 0; x < windowWidth / inverseDensity + 1; x++) {
             for (int y = 0; y < windowHeight / inverseDensity + 1; y++) {
                 VectorMod gravityForce = Vector.NULL.getMod();
-                for (PhysicsRectangle otherObject : physicsRectangles) {
+                for (PhysicsPolygon otherObject : physicsPolygons) {
                     if (!otherObject.isDisabled()) {
                         Vector gravityFromOtherObject = PhysicsUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity));
                         if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);

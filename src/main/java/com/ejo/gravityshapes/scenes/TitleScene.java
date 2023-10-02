@@ -1,4 +1,4 @@
-package com.ejo.gravitysquares.scenes;
+package com.ejo.gravityshapes.scenes;
 
 import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.misc.ColorE;
@@ -11,36 +11,36 @@ import com.ejo.glowui.scene.elements.ElementUI;
 import com.ejo.glowui.scene.elements.TextUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.widget.*;
-import com.ejo.gravitysquares.objects.PhysicsRectangle;
+import com.ejo.glowui.util.Key;
 
 import java.awt.*;
 import java.util.Random;
 
 public class TitleScene extends Scene {
 
-    private final Setting<Integer> squareCount = new Setting<>("squareCount", 50);
+    private final Setting<Integer> objectCount = new Setting<>("objectCount", 50);
     private final Setting<Double> minSize = new Setting<>("minSize", 3d);
     private final Setting<Double> maxSize = new Setting<>("maxSize", 15d);
-    private final Setting<Boolean> bigSquare = new Setting<>("bigSquare", false);
+    private final Setting<Boolean> bigObject = new Setting<>("bigObject", false);
     private final Setting<Boolean> doWallBounce = new Setting<>("doBounce", true);
     private final Setting<Boolean> doCollisions = new Setting<>("doCollisions", false);
     private final Setting<Boolean> drawFieldLines = new Setting<>("drawFieldLines", false);
 
-    private final SliderUI<Integer> sliderSquareCount = new SliderUI<>("Square Count", new Vector(10, 10), new Vector(300, 20), ColorE.BLUE, squareCount, 0, 500, 1, SliderUI.Type.INTEGER, true);
+    private final SliderUI<Integer> sliderObjectCount = new SliderUI<>("Object Count", new Vector(10, 10), new Vector(300, 20), ColorE.BLUE, objectCount, 0, 500, 1, SliderUI.Type.INTEGER, true);
     private final SliderUI<Double> sliderMinSize = new SliderUI<>("Min Size", new Vector(10, 40), new Vector(300, 20), ColorE.BLUE, minSize, 0.1d, 50d, .1, SliderUI.Type.FLOAT, true);
     private final SliderUI<Double> sliderMaxSize = new SliderUI<>("Max Size", new Vector(10, 70), new Vector(300, 20), ColorE.BLUE, maxSize, 1.1d, 50d, .1, SliderUI.Type.FLOAT, true);
 
     private final ToggleUI toggleDoWallBounce = new ToggleUI("Do Wall Bounce", new Vector(10, 100), new Vector(300, 20), ColorE.BLUE, doWallBounce);
     private final ToggleUI toggleDoCollisions = new ToggleUI("Do Collisions", new Vector(10, 130), new Vector(300, 20), ColorE.BLUE, doCollisions);
-    private final ToggleUI toggleBigSquare = new ToggleUI("Big Square", new Vector(10, 160), new Vector(300, 20), ColorE.BLUE, bigSquare);
+    private final ToggleUI toggleBigObject = new ToggleUI("Big Object", new Vector(10, 160), new Vector(300, 20), ColorE.BLUE, bigObject);
     private final ToggleUI toggleDrawFieldLines = new ToggleUI("Draw Field Lines", new Vector(10, 190), new Vector(300, 20), ColorE.BLUE, drawFieldLines);
 
     private final ButtonUI buttonStart = new ButtonUI("Start!", Vector.NULL, new Vector(200, 60), new ColorE(0, 125, 200, 200), ButtonUI.MouseButton.LEFT, () -> {
-        getWindow().setScene(new SquareOrbitScene(squareCount.get(), minSize.get(), maxSize.get(), bigSquare.get(), doWallBounce.get(), doCollisions.get(),drawFieldLines.get()));
+        getWindow().setScene(new GravityScene(objectCount.get(), minSize.get(), maxSize.get(), bigObject.get(), doWallBounce.get(), doCollisions.get(),drawFieldLines.get()));
         SettingManager.getDefaultManager().saveAll();
     });
 
-    private final TextUI title = new TextUI("Gravity Squares", new Font("Arial Black", Font.BOLD, 50), Vector.NULL, ColorE.WHITE);
+    private final TextUI title = new TextUI("Gravity Shapes", new Font("Arial Black", Font.BOLD, 50), Vector.NULL, ColorE.WHITE);
 
     private double titleAnimationStep = 0;
     private final StopWatch watchTwinkleStars = new StopWatch();
@@ -77,11 +77,18 @@ public class TitleScene extends Scene {
         twinkleStars();
     }
 
+    @Override
+    public void onKeyPress(int key, int scancode, int action, int mods) {
+        super.onKeyPress(key, scancode, action, mods);
+        if (key == Key.KEY_ENTER.getId() && action == Key.ACTION_PRESS) {
+            buttonStart.getAction().run();
+        }
+    }
 
     private void initElements() {
         DoOnce.DEFAULT6.run(() -> {
             addStars();
-            addElements(buttonStart, title, sliderSquareCount, sliderMinSize, sliderMaxSize, toggleBigSquare, toggleDoWallBounce, toggleDoCollisions,toggleDrawFieldLines);
+            addElements(buttonStart, title, sliderObjectCount, sliderMinSize, sliderMaxSize, toggleBigObject, toggleDoWallBounce, toggleDoCollisions,toggleDrawFieldLines);
         });
     }
 
@@ -96,8 +103,7 @@ public class TitleScene extends Scene {
         Random random = new Random();
         for (int i = 0; i < 100; i++) {
             ColorE color = new ColorE(255, random.nextInt(125, 255), 100, 255);
-            PhysicsRectangle obj = new PhysicsRectangle(new RectangleUI(new Vector(random.nextDouble(0, getSize().getX()), random.nextDouble(0, getWindow().getSize().getY())), new Vector(1, 1), color), 1, Vector.NULL, Vector.NULL);
-            obj.setDisabled(true);
+            RectangleUI obj = new RectangleUI(new Vector(random.nextDouble(0, getSize().getX()), random.nextDouble(0, getWindow().getSize().getY())), new Vector(1, 1), color);
             obj.setTicking(false);
             addElements(obj);
         }
@@ -108,8 +114,8 @@ public class TitleScene extends Scene {
         Random random = new Random();
         if (watchTwinkleStars.hasTimePassedS(.25)) {
             for (ElementUI element : getElements()) {
-                if (element instanceof PhysicsRectangle phys)
-                    phys.getRectangle().setColor(new ColorE(255, random.nextInt(125, 255), 100, 255));
+                if (element instanceof RectangleUI rect)
+                    rect.setColor(new ColorE(255, random.nextInt(125, 255), 100, 255));
             }
             watchTwinkleStars.restart();
         }
@@ -119,7 +125,7 @@ public class TitleScene extends Scene {
         getWindow().doOnResize.run(() -> {
             Random random = new Random();
             for (ElementUI el : getElements()) {
-                if (el instanceof PhysicsRectangle rect) {
+                if (el instanceof RectangleUI rect) {
                     rect.setPos(new Vector(random.nextDouble(0, getSize().getX()), random.nextDouble(0, getWindow().getSize().getY())));
                 }
             }

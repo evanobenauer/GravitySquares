@@ -1,17 +1,18 @@
-package com.ejo.gravitysquares;
+package com.ejo.gravityshapes;
 
 import com.ejo.glowlib.math.Vector;
 import com.ejo.glowui.Window;
-import com.ejo.gravitysquares.scenes.TitleScene;
+import com.ejo.gravityshapes.scenes.TitleScene;
 
 public class Main {
 
     public static Window window = new Window(
-            "Gravity Squares",
+            "Gravity Shapes",
             new Vector(100,100),
-            new Vector(1400,900),
+            //new Vector(1400,900),
+            new Vector(2400,1600),
             new TitleScene(),
-            true,4,60,60
+            true,8,60,60
     );
 
     public static void main(String[] args) {
