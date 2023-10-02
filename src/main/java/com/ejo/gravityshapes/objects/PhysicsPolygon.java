@@ -13,18 +13,27 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
 
     private final RegularPolygonUI rect;
 
-    public double spin = 0;
+    public double spin;
+    private double omega;
+    private double alpha;
+    private double netTorque;
 
     public PhysicsPolygon(RegularPolygonUI shape, double mass, Vector velocity, Vector acceleration) {
         super(shape, mass, velocity, acceleration);
         this.rect = shape;
+        this.spin = 0;
         setDeltaT(.1f);
     }
 
     @Override
     public void tickElement(Scene scene, Vector mousePos) {
         super.tickElement(scene,mousePos);
-        getPolygon().setRotation(new Angle(getPolygon().getRotation().getRadians() + spin));
+        if (!isDisabled()) {
+            updateAlphaFromTorque();
+            updateRotationalKinematics();
+        }
+        netTorque = 0; //Resets torque after a (DeltaT amount of time) collision
+        getPolygon().setRotation(new Angle(spin));
     }
 
     public void doCollision(PhysicsPolygon object) {
@@ -40,8 +49,11 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         //Set average polygon type
         getPolygon().setVertexCount((int)Math.ceil(getPolygon().getVertexCount() * weight + object.getPolygon().getVertexCount() * (1-weight)));
 
-        //Set spin
-        spinObjectFromCollision(object,.1);
+        //Calculate conservation of angular momentum
+        double thisI = (double) 2 /5 * getMass() * Math.pow(getPolygon().getRadius(),2);
+        double otherI = (double) 2 /5 * object.getMass() * Math.pow(object.getPolygon().getRadius(),2);
+        double angularWeight = thisI / (thisI + otherI);
+        omega = this.omega * angularWeight + object.omega * (1-angularWeight);
 
         //Set mass and radius
         setMass(getMass() + object.getMass());
@@ -49,13 +61,16 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         double radius = Math.pow(getMass()/density * 3/(4*Math.PI), (double) 1/3); //Volume is calculated as a sphere
         getPolygon().setRadius(radius);
 
+        //Set spin
+        spinObjectFromCollision(object,getDeltaT());
+
         //Delete old object
         object.setDisabled(true);
         object.setEnabled(false);
     }
 
-    public void spinObjectFromCollision(PhysicsPolygon object, double maxAddableSpin) {
-        //main object is reference frame. Other object is moving object
+    public void spinObjectFromCollision(PhysicsPolygon object, double collisionTime) {
+        //Main object is reference frame. Other object is moving object
 
         //Calculate perpendicularity of velocity compared to the position
         Vector otherObjRefPos = PhysicsUtil.calculateVectorBetweenObjects(object,this);
@@ -75,13 +90,9 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
             sign = (referenceVelocityAngle.getDegrees() - 180 < referencePosAngle.getDegrees()) ? -1 : 1;
         }
 
-        double massWeight = getMass() / (object.getMass() + getMass());
-        double velocityWeight = Math.min(otherObjRefVelocity.getMagnitude() / 100,1);
-
-        double collisionSpin = sign * (maxAddableSpin * perpendicularity) * massWeight * velocityWeight;
-        double weightedCombineSpin = (spin * massWeight) + (object.spin*(1-massWeight));
-
-        spin = collisionSpin + weightedCombineSpin;
+        //Set the net torque using the force between the two, the radius of the NEW object, and perpendicularity
+        double rotForce = object.getMass()*Math.abs(0 - otherObjRefVelocity.getMagnitude()) / collisionTime;
+        netTorque = rotForce * getPolygon().getRadius() * sign * perpendicularity;
     }
 
     public void doBounce(Scene scene) {
@@ -103,6 +114,16 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
             object.setVelocity(new Vector(object.getVelocity().getX(), -mul * object.getVelocity().getY()));
             setPos(new Vector(getPos().getX(), getPolygon().getRadius()));
         }
+    }
+
+    private void updateAlphaFromTorque() {
+        double I = (double) 2 /5 * getMass() * Math.pow(getPolygon().getRadius(),2);
+        alpha = netTorque / I;
+    }
+
+    private void updateRotationalKinematics() {
+        omega += alpha*getDeltaT();
+        spin += omega*getDeltaT();
     }
 
     public RegularPolygonUI getPolygon() {

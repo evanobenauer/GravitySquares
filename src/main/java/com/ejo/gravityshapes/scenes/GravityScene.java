@@ -76,7 +76,7 @@ public class GravityScene extends Scene {
             } else {
                 for (PhysicsPolygon otherObject : getPhysicsObjects()) {
                     if (obj.equals(otherObject) || otherObject.isDisabled()) continue;
-                    if (PhysicsUtil.areObjectsColliding(obj,otherObject)) obj.spinObjectFromCollision(otherObject,.01);
+                    if (PhysicsUtil.areObjectsColliding(obj,otherObject)) obj.spinObjectFromCollision(otherObject,50);
                 }
             }
 
@@ -94,14 +94,6 @@ public class GravityScene extends Scene {
     @Override
     public void onKeyPress(int key, int scancode, int action, int mods) {
         super.onKeyPress(key, scancode, action, mods);
-
-        //Increase or Decrease the max tick rate for calculations using the + or - key; This is a debug feature
-        if (key == Key.KEY_EQUALS.getId() && action == Key.ACTION_PRESS) {
-            getWindow().setMaxTPS(getWindow().getMaxTPS() + 5);
-        }
-        if (key == Key.KEY_MINUS.getId() && action == Key.ACTION_PRESS) {
-            getWindow().setMaxTPS(getWindow().getMaxTPS() - 5);
-        }
         if (key == Key.KEY_ESC.getId() && action == Key.ACTION_PRESS) {
             buttonX.getAction().run();
         }
