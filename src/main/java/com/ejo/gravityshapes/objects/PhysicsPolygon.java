@@ -64,6 +64,9 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         //Set spin
         spinObjectFromCollision(object,getDeltaT());
 
+        //Set dragging
+        //if (object.isDragging()) this.dragging = true;
+
         //Delete old object
         object.setDisabled(true);
         object.setEnabled(false);

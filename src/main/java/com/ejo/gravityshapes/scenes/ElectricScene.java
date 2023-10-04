@@ -1,7 +1,9 @@
 package com.ejo.gravityshapes.scenes;
 
 import com.ejo.glowlib.math.Angle;
+import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.math.VectorMod;
+import com.ejo.glowlib.misc.ColorE;
 import com.ejo.glowlib.misc.DoOnce;
 import com.ejo.glowui.scene.Scene;
 import com.ejo.glowui.scene.elements.ElementUI;
@@ -12,35 +14,35 @@ import com.ejo.glowui.scene.elements.widget.ButtonUI;
 import com.ejo.glowui.util.Key;
 import com.ejo.glowui.util.QuickDraw;
 import com.ejo.gravityshapes.PhysicsUtil;
+import com.ejo.gravityshapes.objects.PhysicsCharge;
 import com.ejo.gravityshapes.objects.PhysicsPolygon;
-import com.ejo.glowlib.math.Vector;
-import com.ejo.glowlib.misc.ColorE;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class GravityScene extends Scene {
+public class ElectricScene extends Scene {
 
     private final ButtonUI buttonX = new ButtonUI(Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255), ButtonUI.MouseButton.LEFT,() -> getWindow().setScene(new TitleScene()));
-
-    private PhysicsPolygon bigObject = null;
 
     private final boolean doWallBounce;
     private final boolean doCollisions;
     private final boolean drawFieldLines;
 
-    public GravityScene(int objectCount, double sizeMin, double sizeMax, boolean bigObject, boolean doWallBounce, boolean doCollisions, boolean drawFieldLines) {
-        super("Orbit Scene");
+    private double radius;
+
+    public ElectricScene(int protonCount, int electronCount, double radius, boolean doWallBounce, boolean doCollisions, boolean drawFieldLines) {
+        super("Electric Scene");
         DoOnce.DEFAULT1.reset();
 
         this.doWallBounce = doWallBounce;
         this.doCollisions = doCollisions;
         this.drawFieldLines = drawFieldLines;
 
-        addStars();
-        addPhysicsObjects(objectCount,sizeMin,sizeMax);
-        if (bigObject) addBigObject(sizeMax);
+        this.radius = radius;
+
+        addProtons(protonCount);
+        addElectrons(electronCount);
         addElements(buttonX);
     }
 
@@ -48,8 +50,6 @@ public class GravityScene extends Scene {
     public void draw() {
         //Set exit button to top right corner
         buttonX.setPos(new Vector(getSize().getX(),0).getAdded(-buttonX.getSize().getX(),0));
-
-        updateStarPositionsOnResize();
 
         if (this.drawFieldLines) drawFieldLines(.05, getPhysicsObjects());
 
@@ -64,27 +64,26 @@ public class GravityScene extends Scene {
     public void tick() {
         initObjectPositions();
 
-        for (PhysicsPolygon obj : getPhysicsObjects()) {
+        for (PhysicsCharge obj : getPhysicsObjects()) {
             if (obj.isDisabled()) continue;
 
             //Do Collisions
+
             if (doCollisions) {
-                for (PhysicsPolygon otherObject : getPhysicsObjects()) {
+                for (PhysicsCharge otherObject : getPhysicsObjects()) {
                     if (obj.equals(otherObject) || otherObject.isDisabled()) continue;
                     if (PhysicsUtil.areObjectsColliding(obj, otherObject)) obj.doCollision(otherObject);
                 }
-            } else {
-                for (PhysicsPolygon otherObject : getPhysicsObjects()) {
-                    if (obj.equals(otherObject) || otherObject.isDisabled()) continue;
-                    if (PhysicsUtil.areObjectsColliding(obj,otherObject)) obj.spinObjectFromCollision(otherObject,50);
-                }
             }
+
 
             //Do Wall Bounce
             if (doWallBounce) obj.doBounce(this);
 
-            //Set Gravity Force
-            obj.setNetForce(PhysicsUtil.calculateGravityForce(obj, getPhysicsObjects(), 1));
+            //Set Charge Force
+            //Mass = Charge
+            //G = k
+            obj.setNetForce(PhysicsUtil.calculateElectricForce(obj, getPhysicsObjects(), 10));
         }
 
         //Calculate the forces/accelerations. Reset's the added forces after acceleration calculation
@@ -99,77 +98,63 @@ public class GravityScene extends Scene {
         }
     }
 
+    private void addProtons(int objectCount) {
+        double radius = 4;//this.radius;
+        int vertexCount = 14;
+        double charge = 200;
 
-    private void addPhysicsObjects(int objectCount, double sizeMin, double sizeMax) {
+        double density = 1;
+        double vol = (double) 4 /3*Math.PI*Math.pow(radius,3) * density; //Volume is calculated as a sphere
+
         Random random = new Random();
         for (int i = 0; i < objectCount; i++) {
-            double trueSize = (sizeMin == sizeMax) ? sizeMax : random.nextDouble(sizeMin, sizeMax);
             double startVelRange = 10;
-            ColorE randomColor = new ColorE(random.nextInt(25,255),random.nextInt(25,255),random.nextInt(25,255),255);
-            addElements(new PhysicsPolygon(
-                    new RegularPolygonUI(Vector.NULL, randomColor, trueSize, random.nextInt(3,8),new Angle(random.nextDouble(0,2*Math.PI))), (double) 4 /3*Math.PI*Math.pow(trueSize,3),
-                    new Vector(random.nextDouble(-startVelRange,startVelRange),random.nextDouble(-startVelRange,startVelRange)), Vector.NULL));
+            ColorE color = ColorE.BLUE;
+            addElements(new PhysicsCharge(
+                    new RegularPolygonUI(Vector.NULL, color, radius, vertexCount,new Angle(random.nextDouble(0,2*Math.PI))), vol,
+                    charge,new Vector(random.nextDouble(-startVelRange,startVelRange),random.nextDouble(-startVelRange,startVelRange)), Vector.NULL));
         }
     }
 
-    private void addBigObject(double sizeMax) {
-        int mul = 3;
-        addElements(this.bigObject = new PhysicsPolygon(
-                new RegularPolygonUI(Vector.NULL,ColorE.YELLOW, sizeMax * mul,30,new Angle(0)),
-                sizeMax*sizeMax*sizeMax*mul*mul*mul,Vector.NULL,Vector.NULL));
-    }
+    private void addElectrons(int objectCount) {
+        double radius = 4;//this.radius;
+        int vertexCount = 14;
+        double charge = -200;
 
-    private void addStars() {
-        for (int i = 0; i < 100; i++) {
-            ColorE color = new ColorE(255, 255, 255,255);
-            RectangleUI obj = new RectangleUI(Vector.NULL,new Vector(1,1), color);
-            obj.setTicking(false);
-            if (!this.drawFieldLines) addElements(obj);
+        double density = 1;
+        double vol = (double) 4 /3*Math.PI*Math.pow(radius,3) * density; //Volume is calculated as a sphere
+
+        Random random = new Random();
+        for (int i = 0; i < objectCount; i++) {
+            double startVelRange = 10;
+            ColorE color = ColorE.RED;
+            addElements(new PhysicsCharge(
+                    new RegularPolygonUI(Vector.NULL, color, radius, vertexCount,new Angle(random.nextDouble(0,2*Math.PI))), vol,
+                    charge,new Vector(random.nextDouble(-startVelRange,startVelRange),random.nextDouble(-startVelRange,startVelRange)), Vector.NULL));
         }
     }
 
 
     private void initObjectPositions() {
-        DoOnce.DEFAULT1.run(() -> {
-            setRandomObjectPositions();
-
-            //Set Big Object start in the middle
-            if (bigObject != null) bigObject.setPos(getSize().getMultiplied(.5));
-        });
+        DoOnce.DEFAULT1.run(this::setRandomObjectPositions);
     }
 
     private void setRandomObjectPositions() {
         Random random = new Random();
-        for (PhysicsPolygon obj : getPhysicsObjects())
+        for (PhysicsCharge obj : getPhysicsObjects())
             obj.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getSize().getY())));
-        for (ElementUI el : getElements()) {
-            if (el instanceof RectangleUI rect && rect.shouldRender() && !rect.shouldTick()) {
-                rect.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())));
-            }
-        }
-    }
-
-    private void updateStarPositionsOnResize() {
-        getWindow().doOnResize.run(() -> {
-            Random random = new Random();
-            for (ElementUI el : getElements()) {
-                if (el instanceof RectangleUI rect && rect.shouldRender() && !rect.shouldTick()) {
-                    rect.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getWindow().getSize().getY())));
-                }
-            }
-        });
     }
 
 
-    public ArrayList<PhysicsPolygon> getPhysicsObjects() {
-        ArrayList<PhysicsPolygon> rectangles = new ArrayList<>();
+    public ArrayList<PhysicsCharge> getPhysicsObjects() {
+        ArrayList<PhysicsCharge> rectangles = new ArrayList<>();
         for (ElementUI elementUI : getElements()) {
-            if (elementUI instanceof PhysicsPolygon polygon) rectangles.add(polygon);
+            if (elementUI instanceof PhysicsCharge polygon) rectangles.add(polygon);
         }
         return rectangles;
     }
 
-    private void drawFieldLines(double lineDensity, ArrayList<PhysicsPolygon> physicsPolygons) {
+    private void drawFieldLines(double lineDensity, ArrayList<PhysicsCharge> physicsPolygons) {
         int inverseDensity = (int) (1/lineDensity);
         int windowWidth = (int)getWindow().getScaledSize().getX();
         int windowHeight = (int)getWindow().getScaledSize().getY();
@@ -177,9 +162,9 @@ public class GravityScene extends Scene {
         for (int x = 0; x < windowWidth / inverseDensity + 1; x++) {
             for (int y = 0; y < windowHeight / inverseDensity + 1; y++) {
                 VectorMod gravityForce = Vector.NULL.getMod();
-                for (PhysicsPolygon otherObject : physicsPolygons) {
+                for (PhysicsCharge otherObject : physicsPolygons) {
                     if (!otherObject.isDisabled()) {
-                        Vector gravityFromOtherObject = PhysicsUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity));
+                        Vector gravityFromOtherObject = PhysicsUtil.calculateElectricField(100,otherObject,new Vector(x,y).getMultiplied(inverseDensity));
                         if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
                     }
                 }
