@@ -144,7 +144,7 @@ public class GravityScene extends Scene {
             if (action == Mouse.ACTION_CLICK) {
                 boolean isMouseFree = true;
                 for (PhysicsObjectUI obj : getPhysicsObjects()) {
-                    if (obj.isMouseOver()) {
+                    if (obj.isMouseOver() && !obj.isDisabled()) {
                         isMouseFree = false;
                         break;
                     }
@@ -246,10 +246,10 @@ public class GravityScene extends Scene {
     }
 
     private void addBigObject(double sizeMax) {
-        int mul = 3;
+        double radius = sizeMax * 3;
         addElements(this.bigObject = new PhysicsPolygon(
-                new RegularPolygonUI(Vector.NULL,ColorE.YELLOW, sizeMax * mul,30,new Angle(0)),
-                sizeMax*sizeMax*sizeMax*mul*mul*mul,Vector.NULL,Vector.NULL));
+                new RegularPolygonUI(Vector.NULL,ColorE.YELLOW, radius,30,new Angle(0)),
+                (double) 4 /3*Math.PI*Math.pow(radius,3),Vector.NULL,Vector.NULL));
     }
 
     private void addStars() {
