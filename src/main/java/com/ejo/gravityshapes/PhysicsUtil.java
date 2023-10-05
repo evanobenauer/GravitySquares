@@ -3,7 +3,7 @@ package com.ejo.gravityshapes;
 import com.ejo.glowlib.math.VectorMod;
 import com.ejo.glowui.scene.elements.shape.physics.PhysicsObjectUI;
 import com.ejo.glowlib.math.Vector;
-import com.ejo.gravityshapes.objects.PhysicsCharge;
+import com.ejo.gravityshapes.test.PhysicsCharge;
 import com.ejo.gravityshapes.objects.PhysicsPolygon;
 
 import java.util.ArrayList;
@@ -34,33 +34,10 @@ public class PhysicsUtil {
         return distance.getUnitVector().getMultiplied(G * object.getMass() / Math.pow(distance.getMagnitude(), 2));
     }
 
-    public static Vector calculateElectricForce(PhysicsCharge object, ArrayList<PhysicsCharge> physicsObjects, double k) {
-        if (object.isDisabled()) return Vector.NULL;
-
-        VectorMod electricForce = Vector.NULL.getMod();
-
-        //Calculate the force on obj from every other object in the list
-        for (PhysicsCharge otherObject : physicsObjects) {
-            if (!object.equals(otherObject) && !otherObject.isDisabled()) {
-                Vector electricForceFromOtherObject = calculateElectricField(k,otherObject,object.getCenter()).getMultiplied(object.getCharge());
-                if (!(String.valueOf(electricForceFromOtherObject.getMagnitude())).equals("NaN"))
-                    electricForce.add(electricForceFromOtherObject);
-            }
-        }
-        return electricForce;
-    }
-
-    public static Vector calculateElectricField(double k, PhysicsCharge object, Vector location) {
-        Vector distance = PhysicsUtil.calculateVectorBetweenPoints(object.getCenter(),location);
-        return distance.getUnitVector().getMultiplied(-k * object.getCharge() / Math.pow(distance.getMagnitude(), 2));
-    }
-
 
     public static boolean areObjectsColliding(PhysicsObjectUI forceObject, PhysicsObjectUI otherObject) {
         double objectDistance = forceObject.getCenter().getAdded(otherObject.getCenter().getMultiplied(-1)).getMagnitude();
         if (forceObject instanceof PhysicsPolygon forcedGon && otherObject instanceof PhysicsPolygon otherGon)
-            return objectDistance <= forcedGon.getPolygon().getRadius() + otherGon.getPolygon().getRadius();
-        if (forceObject instanceof PhysicsCharge forcedGon && otherObject instanceof PhysicsCharge otherGon)
             return objectDistance <= forcedGon.getPolygon().getRadius() + otherGon.getPolygon().getRadius();
         return false;
     }

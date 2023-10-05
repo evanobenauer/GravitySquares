@@ -18,10 +18,10 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
     private double alpha;
     private double netTorque;
 
-    public PhysicsPolygon(RegularPolygonUI shape, double mass, Vector velocity, Vector acceleration) {
-        super(shape, mass, velocity, acceleration);
+    public PhysicsPolygon(RegularPolygonUI shape, double mass, Vector velocity, Vector netForce) {
+        super(shape, mass, velocity, netForce);
         this.rect = shape;
-        this.spin = 0;
+        this.spin = shape.getRotation() == null ? 0 : shape.getRotation().getRadians();
         setDeltaT(.1f);
     }
 
@@ -65,7 +65,10 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         spinObjectFromCollision(object,getDeltaT());
 
         //Set dragging
-        //if (object.isDragging()) this.dragging = true;
+        if (object.isDragging()) {
+            setPos(object.getPos());
+            setDragging(true);
+        }
 
         //Delete old object
         object.setDisabled(true);

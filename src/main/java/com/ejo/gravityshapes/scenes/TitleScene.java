@@ -12,6 +12,7 @@ import com.ejo.glowui.scene.elements.TextUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.widget.*;
 import com.ejo.glowui.util.Key;
+import com.ejo.gravityshapes.test.ElectricScene;
 
 import java.awt.*;
 import java.util.Random;
@@ -36,11 +37,7 @@ public class TitleScene extends Scene {
     private final ToggleUI toggleDrawFieldLines = new ToggleUI("Draw Field Lines", new Vector(10, 190), new Vector(300, 20), ColorE.BLUE, drawFieldLines);
 
     private final ButtonUI buttonStart = new ButtonUI("Start!", Vector.NULL, new Vector(200, 60), new ColorE(0, 125, 200, 200), ButtonUI.MouseButton.LEFT, () -> {
-        if (Key.KEY_E.isKeyDown()) {
-            getWindow().setScene(new ElectricScene(objectCount.get()/2,objectCount.get()/2, minSize.get() ,doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));
-        } else {
-            getWindow().setScene(new GravityScene(objectCount.get(), minSize.get(), maxSize.get(), bigObject.get(), doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));
-        }
+        getWindow().setScene(new GravityScene(objectCount.get(), minSize.get(), maxSize.get(), bigObject.get(), doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));
         SettingManager.getDefaultManager().saveAll();
     });
 
