@@ -18,6 +18,7 @@ import com.ejo.gravityshapes.PhysicsUtil;
 import com.ejo.gravityshapes.objects.PhysicsPolygon;
 import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.misc.ColorE;
+import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -29,14 +30,12 @@ public class GravityScene extends Scene {
 
     private PhysicsPolygon bigObject = null;
 
-    private final double sizeMin;
-    private final double sizeMax;
-
     private final boolean doWallBounce;
     private final boolean doCollisions;
     private final boolean drawFieldLines;
 
     private boolean shooting;
+    private boolean shouldRenderShooting;
     private Vector shootPos;
     private Vector shootVelocity;
     private double shootSize;
@@ -49,17 +48,15 @@ public class GravityScene extends Scene {
         super("Orbit Scene");
         DoOnce.DEFAULT1.reset();
 
-        this.sizeMin = sizeMin;
-        this.sizeMax = sizeMax;
-
         this.doWallBounce = doWallBounce;
         this.doCollisions = doCollisions;
         this.drawFieldLines = drawFieldLines;
 
         this.shooting = false;
+        this.shouldRenderShooting = false;
         this.shootPos = Vector.NULL;
         this.shootVelocity = Vector.NULL;
-        this.shootSize = 0;
+        this.shootSize = sizeMin;
         this.shootSpin = 0;
         this.shootVertices = 0;
         shooter.run(() -> {});
@@ -83,8 +80,9 @@ public class GravityScene extends Scene {
         super.draw();
 
         //Draw Shooting Object Visual
-        if (shooting) {
+        if (shooting && shouldRenderShooting) {
             RegularPolygonUI polygonUI = new RegularPolygonUI(shootPos, DrawUtil.GLOW_BLUE,true,shootSize,shootVertices,new Angle(shootSpin,true));
+            GL11.glLineWidth(3);
             polygonUI.draw();
             LineUI line = new LineUI(shootPos,shootPos.getAdded(shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1))),ColorE.WHITE, LineUI.Type.DOTTED,2);
             line.draw();
@@ -135,6 +133,10 @@ public class GravityScene extends Scene {
         if (key == Key.KEY_ESC.getId() && action == Key.ACTION_PRESS) {
             buttonX.getAction().run();
         }
+        if (shooting) {
+            if (key == Key.KEY_UP.getId()) shootSize += 1;
+            if (key == Key.KEY_DOWN.getId()) shootSize -= 1;
+        }
     }
 
     @Override
@@ -158,6 +160,14 @@ public class GravityScene extends Scene {
         }
     }
 
+    @Override
+    public void onMouseScroll(int scroll, Vector mousePos) {
+        super.onMouseScroll(scroll, mousePos);
+        if (shooting) {
+            shootSize += scroll;
+            if (shootSize < .1) shootSize = .1;
+        }
+    }
 
     private void drawFieldLines(double lineDensity, ArrayList<PhysicsPolygon> physicsPolygons) {
         int inverseDensity = (int) (1/lineDensity);
@@ -184,13 +194,14 @@ public class GravityScene extends Scene {
             shooter.reset();
             shooterInitializer.run(() -> {
                 Random random = new Random();
-                shootSize = (sizeMin == sizeMax) ? sizeMax : random.nextDouble(sizeMin, sizeMax);
                 shootVertices = random.nextInt(3, 8);
+                shouldRenderShooting = true;
             });
         } else {
             shooterInitializer.reset();
             shooter.run(() -> {
                 //Shoot the object
+                shouldRenderShooting = false;
                 Random random = new Random();
                 shootVelocity = shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1)).getMultiplied(.75);
                 ColorE randomColor = new ColorE(random.nextInt(25,255),random.nextInt(25,255),random.nextInt(25,255),255);

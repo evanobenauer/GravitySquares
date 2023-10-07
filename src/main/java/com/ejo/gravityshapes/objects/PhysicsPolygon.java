@@ -1,6 +1,7 @@
 package com.ejo.gravityshapes.objects;
 
 import com.ejo.glowlib.math.Angle;
+import com.ejo.glowlib.math.MathE;
 import com.ejo.glowlib.misc.ColorE;
 import com.ejo.glowui.scene.Scene;
 import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
@@ -47,7 +48,7 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         getPolygon().setColor(new ColorE((int)(getColor().getRed() * weight + object.getColor().getRed() * (1-weight)),(int)(getColor().getGreen() * weight + object.getColor().getGreen() * (1-weight)),(int)(getColor().getBlue() * weight + object.getColor().getBlue() * (1-weight))));
 
         //Set average polygon type
-        getPolygon().setVertexCount((int)Math.ceil(getPolygon().getVertexCount() * weight + object.getPolygon().getVertexCount() * (1-weight)));
+        getPolygon().setVertexCount((int) MathE.roundDouble(getPolygon().getVertexCount() * weight + object.getPolygon().getVertexCount() * (1-weight),0));
 
         //Calculate conservation of angular momentum
         double thisI = (double) 2 /5 * getMass() * Math.pow(getPolygon().getRadius(),2);
@@ -68,6 +69,7 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         if (object.isDragging()) setDragging(true);
 
         //Delete old object
+        object.setDragging(false);
         object.setDisabled(true);
         object.setEnabled(false);
     }
