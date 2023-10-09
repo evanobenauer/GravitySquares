@@ -5,10 +5,10 @@ import com.ejo.glowlib.math.MathE;
 import com.ejo.glowlib.misc.ColorE;
 import com.ejo.glowui.scene.Scene;
 import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
-import com.ejo.glowui.scene.elements.shape.physics.PhysicsDraggableUI;
-import com.ejo.glowui.scene.elements.shape.physics.PhysicsObjectUI;
 import com.ejo.glowlib.math.Vector;
-import com.ejo.gravityshapes.PhysicsUtil;
+import com.ejo.uiphysics.elements.PhysicsDraggableUI;
+import com.ejo.uiphysics.elements.PhysicsObjectUI;
+import com.ejo.uiphysics.util.VectorUtil;
 
 public class PhysicsPolygon extends PhysicsDraggableUI {
 
@@ -67,7 +67,7 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         //Main object is reference frame. Other object is moving object
 
         //Calculate perpendicularity of velocity compared to the position
-        Vector otherObjRefPos = PhysicsUtil.calculateVectorBetweenObjects(object,this);
+        Vector otherObjRefPos = VectorUtil.calculateVectorBetweenObjects(object,this);
         Vector otherObjRefVelocity = object.getVelocity().getAdded(getVelocity().getMultiplied(-1));
         double perpendicularity = otherObjRefPos.getUnitVector().getCross(otherObjRefVelocity.getUnitVector()).getMagnitude();
 

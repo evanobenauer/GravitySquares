@@ -8,16 +8,17 @@ import com.ejo.glowui.scene.elements.ElementUI;
 import com.ejo.glowui.scene.elements.shape.LineUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
-import com.ejo.glowui.scene.elements.shape.physics.PhysicsObjectUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
 import com.ejo.glowui.util.DrawUtil;
 import com.ejo.glowui.util.Key;
 import com.ejo.glowui.util.Mouse;
 import com.ejo.glowui.util.QuickDraw;
-import com.ejo.gravityshapes.PhysicsUtil;
+import com.ejo.gravityshapes.Util;
 import com.ejo.gravityshapes.objects.PhysicsPolygon;
 import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.misc.ColorE;
+import com.ejo.uiphysics.elements.PhysicsObjectUI;
+import com.ejo.uiphysics.util.GravityUtil;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -98,18 +99,18 @@ public class GravityScene extends Scene {
         initObjectPositions();
 
         for (PhysicsPolygon obj : getPhysicsObjects()) {
-            if (obj.isDisabled()) continue;
+            if (obj.isPhysicsDisabled()) continue;
 
             //Do Collisions
             if (doCollisions) {
                 for (PhysicsPolygon otherObject : getPhysicsObjects()) {
-                    if (obj.equals(otherObject) || otherObject.isDisabled()) continue;
-                    if (PhysicsUtil.areObjectsColliding(obj, otherObject)) obj.doCollision(otherObject);
+                    if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
+                    if (Util.areObjectsColliding(obj, otherObject)) obj.doCollision(otherObject);
                 }
             } else {
                 for (PhysicsPolygon otherObject : getPhysicsObjects()) {
-                    if (obj.equals(otherObject) || otherObject.isDisabled()) continue;
-                    if (PhysicsUtil.areObjectsColliding(obj,otherObject)) obj.spinObjectFromCollision(otherObject,50);
+                    if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
+                    if (Util.areObjectsColliding(obj,otherObject)) obj.spinObjectFromCollision(otherObject,50);
                 }
             }
 
@@ -117,7 +118,7 @@ public class GravityScene extends Scene {
             if (doWallBounce) obj.doBounce(this);
 
             //Set Gravity Force
-            obj.setNetForce(PhysicsUtil.calculateGravityForce(obj, getPhysicsObjects(), 1));
+            obj.setNetForce(GravityUtil.calculateGravityForce(obj, getPhysicsObjects(), 1));
         }
 
         //Run Shoot New Object Computations
@@ -146,7 +147,7 @@ public class GravityScene extends Scene {
             if (action == Mouse.ACTION_CLICK) {
                 boolean isMouseFree = true;
                 for (PhysicsObjectUI obj : getPhysicsObjects()) {
-                    if (obj.isMouseOver() && !obj.isDisabled()) {
+                    if (obj.isMouseOver() && !obj.isPhysicsDisabled()) {
                         isMouseFree = false;
                         break;
                     }
@@ -178,8 +179,8 @@ public class GravityScene extends Scene {
             for (int y = 0; y < windowHeight / inverseDensity + 1; y++) {
                 VectorMod gravityForce = Vector.NULL.getMod();
                 for (PhysicsPolygon otherObject : physicsPolygons) {
-                    if (!otherObject.isDisabled()) {
-                        Vector gravityFromOtherObject = PhysicsUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity));
+                    if (!otherObject.isPhysicsDisabled()) {
+                        Vector gravityFromOtherObject = GravityUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity));
                         if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
                     }
                 }
