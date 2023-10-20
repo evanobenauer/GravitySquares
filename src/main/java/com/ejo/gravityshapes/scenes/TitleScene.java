@@ -12,7 +12,6 @@ import com.ejo.glowui.scene.elements.TextUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.widget.*;
 import com.ejo.glowui.util.Key;
-import com.ejo.gravityshapes.test.ElectricScene;
 
 import java.awt.*;
 import java.util.Random;

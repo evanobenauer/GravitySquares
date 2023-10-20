@@ -3,22 +3,23 @@ package com.ejo.gravityshapes.scenes;
 import com.ejo.glowlib.math.Angle;
 import com.ejo.glowlib.math.VectorMod;
 import com.ejo.glowlib.misc.DoOnce;
+import com.ejo.glowlib.util.NumberUtil;
 import com.ejo.glowui.scene.Scene;
 import com.ejo.glowui.scene.elements.ElementUI;
 import com.ejo.glowui.scene.elements.shape.LineUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
-import com.ejo.glowui.util.DrawUtil;
 import com.ejo.glowui.util.Key;
 import com.ejo.glowui.util.Mouse;
-import com.ejo.glowui.util.QuickDraw;
+import com.ejo.glowui.util.render.QuickDraw;
 import com.ejo.gravityshapes.Util;
 import com.ejo.gravityshapes.objects.PhysicsPolygon;
 import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.misc.ColorE;
 import com.ejo.uiphysics.elements.PhysicsObjectUI;
 import com.ejo.uiphysics.util.GravityUtil;
+import com.ejo.uiphysics.util.VectorUtil;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -82,12 +83,25 @@ public class GravityScene extends Scene {
 
         //Draw Shooting Object Visual
         if (shooting && shouldRenderShooting) {
-            RegularPolygonUI polygonUI = new RegularPolygonUI(shootPos, DrawUtil.GLOW_BLUE,true,shootSize,shootVertices,new Angle(shootSpin,true));
+            RegularPolygonUI polygonUI = new RegularPolygonUI(shootPos, com.ejo.glowui.util.Util.GLOW_BLUE,true,shootSize,shootVertices,new Angle(shootSpin,true));
             GL11.glLineWidth(3);
             polygonUI.draw();
             LineUI line = new LineUI(shootPos,shootPos.getAdded(shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1))),ColorE.WHITE, LineUI.Type.DOTTED,2);
             line.draw();
             shootSpin += 1;
+        }
+
+        if (getWindow().isDebug()) {
+            for (PhysicsObjectUI object : getPhysicsObjects()) {
+                if (object.isPhysicsDisabled()) continue;
+                //Force
+                LineUI lineUI = new LineUI(object.getCenter(), VectorUtil.getUIAngleFromVector(object.getNetForce()), NumberUtil.getBoundValue(object.getNetForce().getMagnitude() / 100,0,100).doubleValue(), ColorE.BLUE, LineUI.Type.PLAIN, 4);
+                lineUI.draw();
+
+                //Velocity
+                LineUI lineUI2 = new LineUI(object.getCenter(), VectorUtil.getUIAngleFromVector(object.getVelocity()), object.getVelocity().getMagnitude(), ColorE.RED, LineUI.Type.PLAIN, 2);
+                lineUI2.draw();
+            }
         }
 
         //Draw X for Exit Button

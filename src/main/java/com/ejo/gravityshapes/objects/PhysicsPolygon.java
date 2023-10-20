@@ -59,7 +59,7 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
 
         //Delete old object
         object.setDragging(false);
-        object.setDisabled(true);
+        object.setPhysicsDisabled(true);
         object.setEnabled(false);
     }
 
