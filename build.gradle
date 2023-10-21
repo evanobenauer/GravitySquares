@@ -16,7 +16,7 @@ project.ext.lwjglNatives = "natives-windows"
 dependencies {
     implementation 'com.github.evanobenauer:GlowLib:1.2.0'
     implementation 'com.github.evanobenauer:GlowUI:294a172e50'
-    implementation 'com.github.evanobenauer:UIPhysics:1b0a5bf855'
+    implementation 'com.github.evanobenauer:UIPhysics:ec3920cc30'
 
     implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
 

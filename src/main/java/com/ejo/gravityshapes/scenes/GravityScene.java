@@ -91,19 +91,6 @@ public class GravityScene extends Scene {
             shootSpin += 1;
         }
 
-        if (getWindow().isDebug()) {
-            for (PhysicsObjectUI object : getPhysicsObjects()) {
-                if (object.isPhysicsDisabled()) continue;
-                //Force
-                LineUI lineUI = new LineUI(object.getCenter(), VectorUtil.getUIAngleFromVector(object.getNetForce()), NumberUtil.getBoundValue(object.getNetForce().getMagnitude() / 100,0,100).doubleValue(), ColorE.BLUE, LineUI.Type.PLAIN, 4);
-                lineUI.draw();
-
-                //Velocity
-                LineUI lineUI2 = new LineUI(object.getCenter(), VectorUtil.getUIAngleFromVector(object.getVelocity()), object.getVelocity().getMagnitude(), ColorE.RED, LineUI.Type.PLAIN, 2);
-                lineUI2.draw();
-            }
-        }
-
         //Draw X for Exit Button
         QuickDraw.drawText("X",new Font("Arial",Font.PLAIN,14), buttonX.getPos().getAdded(3,-2),ColorE.WHITE);
     }
@@ -114,6 +101,10 @@ public class GravityScene extends Scene {
 
         for (PhysicsPolygon obj : getPhysicsObjects()) {
             if (obj.isPhysicsDisabled()) continue;
+
+            //Debug Vectors
+            obj.setDebugVectorForceScale(.005);
+            obj.setDebugVectorCap(100);
 
             //Do Collisions
             if (doCollisions) {
