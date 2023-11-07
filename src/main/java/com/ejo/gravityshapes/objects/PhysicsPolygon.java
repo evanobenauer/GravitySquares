@@ -28,6 +28,7 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         getPolygon().setRotation(new Angle(getSpin()));
     }
 
+    //TODO: Make a "Bop" sound effect from the collision
     public void doCollision(PhysicsPolygon object) {
         double weight = getMass() / (object.getMass() + getMass());
 
@@ -89,7 +90,7 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         setNetTorque(rotForce * getPolygon().getRadius() * sign * perpendicularity);
     }
 
-    public void doBounce(Scene scene) {
+    public void doWallBounce(Scene scene) {
         PhysicsObjectUI object = this;
         double mul = .1f;
         if (getPos().getX() + getPolygon().getRadius() > scene.getSize().getX()) {
@@ -116,9 +117,10 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
     }
 
     @Override
-    public void resetMovement() {
+    public PhysicsPolygon resetMovement() {
         setNetForce(Vector.NULL);
         setVelocity(Vector.NULL);
+        return this;
     }
 
     public RegularPolygonUI getPolygon() {

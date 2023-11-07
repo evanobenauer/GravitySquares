@@ -10,7 +10,9 @@ import com.ejo.glowui.scene.Scene;
 import com.ejo.glowui.scene.elements.ElementUI;
 import com.ejo.glowui.scene.elements.TextUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
-import com.ejo.glowui.scene.elements.widget.*;
+import com.ejo.glowui.scene.elements.widget.ButtonUI;
+import com.ejo.glowui.scene.elements.widget.SliderUI;
+import com.ejo.glowui.scene.elements.widget.ToggleUI;
 import com.ejo.glowui.util.Key;
 
 import java.awt.*;
@@ -37,6 +39,7 @@ public class TitleScene extends Scene {
 
     private final ButtonUI buttonStart = new ButtonUI("Start!", Vector.NULL, new Vector(200, 60), new ColorE(0, 125, 200, 200), ButtonUI.MouseButton.LEFT, () -> {
         getWindow().setScene(new GravityScene(objectCount.get(), minSize.get(), maxSize.get(), bigObject.get(), doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));
+        //getWindow().setScene(new ElectricScene(objectCount.get(), objectCount.get(), maxSize.get(), doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));
         SettingManager.getDefaultManager().saveAll();
     });
 

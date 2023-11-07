@@ -3,7 +3,6 @@ package com.ejo.gravityshapes.scenes;
 import com.ejo.glowlib.math.Angle;
 import com.ejo.glowlib.math.VectorMod;
 import com.ejo.glowlib.misc.DoOnce;
-import com.ejo.glowlib.util.NumberUtil;
 import com.ejo.glowui.scene.Scene;
 import com.ejo.glowui.scene.elements.ElementUI;
 import com.ejo.glowui.scene.elements.shape.LineUI;
@@ -19,7 +18,6 @@ import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.misc.ColorE;
 import com.ejo.uiphysics.elements.PhysicsObjectUI;
 import com.ejo.uiphysics.util.GravityUtil;
-import com.ejo.uiphysics.util.VectorUtil;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -38,6 +36,7 @@ public class GravityScene extends Scene {
 
     private boolean shooting;
     private boolean shouldRenderShooting;
+
     private Vector shootPos;
     private Vector shootVelocity;
     private double shootSize;
@@ -61,7 +60,7 @@ public class GravityScene extends Scene {
         this.shootSize = sizeMin;
         this.shootSpin = 0;
         this.shootVertices = 0;
-        shooter.run(() -> {});
+        this.shooter.run(() -> {});
 
         addStars();
         addPhysicsObjects(objectCount,sizeMin,sizeMax);
@@ -82,14 +81,7 @@ public class GravityScene extends Scene {
         super.draw();
 
         //Draw Shooting Object Visual
-        if (shooting && shouldRenderShooting) {
-            RegularPolygonUI polygonUI = new RegularPolygonUI(shootPos, com.ejo.glowui.util.Util.GLOW_BLUE,true,shootSize,shootVertices,new Angle(shootSpin,true));
-            GL11.glLineWidth(3);
-            polygonUI.draw();
-            LineUI line = new LineUI(shootPos,shootPos.getAdded(shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1))),ColorE.WHITE, LineUI.Type.DOTTED,2);
-            line.draw();
-            shootSpin += 1;
-        }
+        if (shooting && shouldRenderShooting) drawShootingObject();
 
         //Draw X for Exit Button
         QuickDraw.drawText("X",new Font("Arial",Font.PLAIN,14), buttonX.getPos().getAdded(3,-2),ColorE.WHITE);
@@ -103,7 +95,7 @@ public class GravityScene extends Scene {
             if (obj.isPhysicsDisabled()) continue;
 
             //Debug Vectors
-            obj.setDebugVectorForceScale(.005);
+            obj.setDebugVectorForceScale((double) 1 /100); //TODO: Make the force vector scale multiple of max mass
             obj.setDebugVectorCap(100);
 
             //Do Collisions
@@ -120,7 +112,7 @@ public class GravityScene extends Scene {
             }
 
             //Do Wall Bounce
-            if (doWallBounce) obj.doBounce(this);
+            if (doWallBounce) obj.doWallBounce(this);
 
             //Set Gravity Force
             obj.setNetForce(GravityUtil.calculateGravityForce(obj, getPhysicsObjects(), 1));
@@ -193,6 +185,15 @@ public class GravityScene extends Scene {
                 lineUI.draw();
             }
         }
+    }
+
+    private void drawShootingObject() {
+        RegularPolygonUI polygonUI = new RegularPolygonUI(shootPos, com.ejo.glowui.util.Util.GLOW_BLUE,true,shootSize,shootVertices,new Angle(shootSpin,true));
+        GL11.glLineWidth(3);
+        polygonUI.draw();
+        LineUI line = new LineUI(shootPos,shootPos.getAdded(shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1))),ColorE.WHITE, LineUI.Type.DOTTED,2);
+        line.draw();
+        shootSpin += 1;
     }
 
     private void updateShootObject() {
