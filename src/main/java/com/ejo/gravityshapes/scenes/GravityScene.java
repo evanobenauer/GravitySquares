@@ -181,7 +181,7 @@ public class GravityScene extends Scene {
                         if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
                     }
                 }
-                LineUI lineUI = new LineUI(new Vector(x,y).getMultiplied(inverseDensity),gravityForce.getUnitVector().getMultiplied(Math.min(Math.max(gravityForce.getMagnitude(),.1),1)*10).getAdded(new Vector(x,y).getMultiplied(inverseDensity)),ColorE.WHITE.alpha(100), LineUI.Type.PLAIN,.5);
+                LineUI lineUI = new LineUI(new Vector(x,y).getMultiplied(inverseDensity),gravityForce.getTheta(),Math.min(Math.max(gravityForce.getMagnitude(),.1),1)*10,ColorE.WHITE.alpha(100), LineUI.Type.PLAIN,.5);
                 lineUI.draw();
             }
         }
@@ -191,7 +191,7 @@ public class GravityScene extends Scene {
         RegularPolygonUI polygonUI = new RegularPolygonUI(shootPos, com.ejo.glowui.util.Util.GLOW_BLUE,true,shootSize,shootVertices,new Angle(shootSpin,true));
         GL11.glLineWidth(3);
         polygonUI.draw();
-        LineUI line = new LineUI(shootPos,shootPos.getAdded(shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1))),ColorE.WHITE, LineUI.Type.DOTTED,2);
+        LineUI line = new LineUI(ColorE.WHITE, LineUI.Type.DOTTED,2,shootPos,shootPos.getAdded(shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1))));
         line.draw();
         shootSpin += 1;
     }

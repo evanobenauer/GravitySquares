@@ -117,10 +117,9 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
     }
 
     @Override
-    public PhysicsPolygon resetMovement() {
+    public void resetMovement() {
         setNetForce(Vector.NULL);
         setVelocity(Vector.NULL);
-        return this;
     }
 
     public RegularPolygonUI getPolygon() {
