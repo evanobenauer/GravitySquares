@@ -9,8 +9,7 @@ public class Main {
     public static Window window = new Window(
             "Gravity Shapes",
             new Vector(100,100),
-            //new Vector(1400,900),
-            new Vector(2400,1600),
+            new Vector(1400,900),
             new TitleScene(),
             true,8,60,60
     );
