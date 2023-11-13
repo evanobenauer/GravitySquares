@@ -8,7 +8,6 @@ import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
 import com.ejo.glowlib.math.Vector;
 import com.ejo.uiphysics.elements.PhysicsDraggableUI;
 import com.ejo.uiphysics.elements.PhysicsObjectUI;
-import com.ejo.uiphysics.util.VectorUtil;
 
 public class PhysicsPolygon extends PhysicsDraggableUI {
 
@@ -19,12 +18,12 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         this.rect = shape;
         this.spin = shape.getRotation() == null ? 0 : shape.getRotation().getRadians();
         setDeltaT(.1f);
+        setTickNetReset(true);
     }
 
     @Override
     public void tickElement(Scene scene, Vector mousePos) {
         super.tickElement(scene,mousePos);
-        setNetTorque(0); //Resets torque after a (DeltaT amount of time) collision
         getPolygon().setRotation(new Angle(getSpin()));
     }
 
@@ -39,6 +38,13 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         //Set average color
         getPolygon().setColor(new ColorE((int)(getColor().getRed() * weight + object.getColor().getRed() * (1-weight)),(int)(getColor().getGreen() * weight + object.getColor().getGreen() * (1-weight)),(int)(getColor().getBlue() * weight + object.getColor().getBlue() * (1-weight))));
 
+        //Set average polygon spin
+        double rot = simplifyAngle(getSpin());
+        double otherRot = simplifyAngle(object.getSpin());
+        while (rot > Math.PI * 2 / getPolygon().getVertexCount()) rot -= Math.PI * 2 / getPolygon().getVertexCount();
+        while (otherRot > Math.PI * 2 / object.getPolygon().getVertexCount()) otherRot -= Math.PI * 2 / object.getPolygon().getVertexCount();
+        setSpin(rot*weight + otherRot*(1-weight));
+
         //Set average polygon type
         getPolygon().setVertexCount((int) MathE.roundDouble(getPolygon().getVertexCount() * weight + object.getPolygon().getVertexCount() * (1-weight),0));
 
@@ -52,8 +58,8 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         double radius = Math.pow(getMass()/density * 3/(4*Math.PI), (double) 1/3); //Volume is calculated as a sphere
         getPolygon().setRadius(radius);
 
-        //Set spin
-        spinObjectFromCollision(object,getDeltaT());
+        //Set torque
+        applyTorqueFromCollision(object,getDeltaT());
 
         //Set dragging
         if (object.isDragging()) setDragging(true);
@@ -64,12 +70,12 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         object.setEnabled(false);
     }
 
-    public void spinObjectFromCollision(PhysicsPolygon object, double collisionTime) {
+    public void applyTorqueFromCollision(PhysicsPolygon object, double collisionTime) {
         //Main object is reference frame. Other object is moving object
 
         //Calculate perpendicularity of velocity compared to the position
-        Vector otherObjRefPos = VectorUtil.calculateVectorBetweenObjects(object,this);
-        Vector otherObjRefVelocity = object.getVelocity().getAdded(getVelocity().getMultiplied(-1));
+        Vector otherObjRefPos = object.getCenter().getSubtracted(getCenter());//VectorUtil.calculateVectorBetweenObjects(object,this);
+        Vector otherObjRefVelocity = object.getVelocity().getSubtracted(getVelocity());
         double perpendicularity = otherObjRefPos.getUnitVector().getCross(otherObjRefVelocity.getUnitVector()).getMagnitude();
 
         //Calculate the sign of the velocity compared to the position
@@ -87,7 +93,17 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
 
         //Set the net torque using the force between the two, the radius of the NEW object, and perpendicularity
         double rotForce = object.getMass()*Math.abs(0 - otherObjRefVelocity.getMagnitude()) / collisionTime;
-        setNetTorque(rotForce * getPolygon().getRadius() * sign * perpendicularity);
+        addTorque(rotForce * getPolygon().getRadius() * sign * perpendicularity);
+    }
+
+    private double simplifyAngle(double rad) {
+        while (rad > Math.PI * 2) {
+            rad -= Math.PI * 2;
+        }
+        while (rad < 0) {
+            rad += Math.PI * 2;
+        }
+        return rad;
     }
 
     public void doWallBounce(Scene scene) {

@@ -102,12 +102,12 @@ public class GravityScene extends Scene {
             if (doCollisions) {
                 for (PhysicsPolygon otherObject : getPhysicsObjects()) {
                     if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
-                    if (Util.areObjectsColliding(obj, otherObject)) obj.doCollision(otherObject);
+                    if (Util.areObjectsInCollisionRange(obj, otherObject) && obj.isColliding(otherObject)) obj.doCollision(otherObject);
                 }
             } else {
                 for (PhysicsPolygon otherObject : getPhysicsObjects()) {
                     if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
-                    if (Util.areObjectsColliding(obj,otherObject)) obj.spinObjectFromCollision(otherObject,50);
+                    if (Util.areObjectsInCollisionRange(obj, otherObject) && obj.isColliding(otherObject)) obj.applyTorqueFromCollision(otherObject,50);
                 }
             }
 
@@ -115,7 +115,7 @@ public class GravityScene extends Scene {
             if (doWallBounce) obj.doWallBounce(this);
 
             //Set Gravity Force
-            obj.setNetForce(GravityUtil.calculateGravityForce(obj, getPhysicsObjects(), 1));
+            obj.addForce(GravityUtil.calculateGravityForce(obj, getPhysicsObjects(), 1));
         }
 
         //Run Shoot New Object Computations
@@ -194,6 +194,7 @@ public class GravityScene extends Scene {
         LineUI line = new LineUI(ColorE.WHITE, LineUI.Type.DOTTED,2,shootPos,shootPos.getAdded(shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1))));
         line.draw();
         shootSpin += 1;
+        if (shootSpin > 360) shootSpin = 0;
     }
 
     private void updateShootObject() {
