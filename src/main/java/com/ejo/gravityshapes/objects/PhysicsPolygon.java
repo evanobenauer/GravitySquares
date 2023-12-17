@@ -17,7 +17,7 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         super(shape, mass, velocity, netForce);
         this.rect = shape;
         this.spin = shape.getRotation() == null ? 0 : shape.getRotation().getRadians();
-        setDeltaT(.1f);
+        setDeltaT(.05f);
         setTickNetReset(true);
     }
 
@@ -39,11 +39,11 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         getPolygon().setColor(new ColorE((int)(getColor().getRed() * weight + object.getColor().getRed() * (1-weight)),(int)(getColor().getGreen() * weight + object.getColor().getGreen() * (1-weight)),(int)(getColor().getBlue() * weight + object.getColor().getBlue() * (1-weight))));
 
         //Set average polygon spin
-        double rot = simplifyAngle(getSpin());
-        double otherRot = simplifyAngle(object.getSpin());
-        while (rot > Math.PI * 2 / getPolygon().getVertexCount()) rot -= Math.PI * 2 / getPolygon().getVertexCount();
-        while (otherRot > Math.PI * 2 / object.getPolygon().getVertexCount()) otherRot -= Math.PI * 2 / object.getPolygon().getVertexCount();
-        setSpin(rot*weight + otherRot*(1-weight));
+        double spin = simplifyAngle(getSpin());
+        double otherSpin = simplifyAngle(object.getSpin());
+        while (spin > Math.PI * 2 / getPolygon().getVertexCount()) spin -= Math.PI * 2 / getPolygon().getVertexCount();
+        while (otherSpin > Math.PI * 2 / object.getPolygon().getVertexCount()) otherSpin -= Math.PI * 2 / object.getPolygon().getVertexCount();
+        setSpin(spin*weight + otherSpin*(1-weight));
 
         //Set average polygon type
         getPolygon().setVertexCount((int) MathE.roundDouble(getPolygon().getVertexCount() * weight + object.getPolygon().getVertexCount() * (1-weight),0));
@@ -97,12 +97,8 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
     }
 
     private double simplifyAngle(double rad) {
-        while (rad > Math.PI * 2) {
-            rad -= Math.PI * 2;
-        }
-        while (rad < 0) {
-            rad += Math.PI * 2;
-        }
+        while (rad > Math.PI * 2) rad -= Math.PI * 2;
+        while (rad < 0) rad += Math.PI * 2;
         return rad;
     }
 
