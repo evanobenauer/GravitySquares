@@ -100,7 +100,7 @@ public class CollisionGravityScene extends Scene {
             obj.setDebugVectorCap(100);
 
             //Set Gravity Force
-            obj.addForce(GravityUtil.calculateGravityForce(obj, getPhysicsObjects(), 1));
+            obj.addForce(Util.calculateGravityForce(1,obj, getPhysicsObjects(), 5));
 
             //Do Collisions
             if (doCollisions) {

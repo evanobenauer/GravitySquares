@@ -18,6 +18,7 @@ import com.ejo.glowlib.math.Vector;
 import com.ejo.glowlib.misc.ColorE;
 import com.ejo.uiphysics.elements.PhysicsObjectUI;
 import com.ejo.uiphysics.util.GravityUtil;
+import com.ejo.uiphysics.util.VectorUtil;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -115,7 +116,7 @@ public class GravityScene extends Scene {
             if (doWallBounce) obj.doWallBounce(this);
 
             //Set Gravity Force
-            obj.addForce(GravityUtil.calculateGravityForce(obj, getPhysicsObjects(), 1));
+            obj.addForce(Util.calculateGravityForce(1,obj, getPhysicsObjects(), 10));
         }
 
         //Run Shoot New Object Computations
