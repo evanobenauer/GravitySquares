@@ -15,7 +15,6 @@ import com.ejo.glowui.scene.elements.widget.ButtonUI;
 import com.ejo.glowui.util.Key;
 import com.ejo.glowui.util.Mouse;
 import com.ejo.glowui.util.render.QuickDraw;
-import com.ejo.gravityshapes.Util;
 import com.ejo.gravityshapes.objects.PhysicsCircle;
 import com.ejo.uiphysics.elements.PhysicsObjectUI;
 import com.ejo.uiphysics.util.GravityUtil;
@@ -25,7 +24,6 @@ import org.lwjgl.opengl.GL11;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.TreeMap;
 
 public class MultiParticleGravityScene extends Scene {
 
