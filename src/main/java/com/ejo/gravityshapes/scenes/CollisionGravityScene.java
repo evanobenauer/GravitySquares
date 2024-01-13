@@ -12,8 +12,8 @@ import com.ejo.glowui.scene.elements.shape.LineUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
-import com.ejo.glowui.util.Key;
-import com.ejo.glowui.util.Mouse;
+import com.ejo.glowui.util.input.Key;
+import com.ejo.glowui.util.input.Mouse;
 import com.ejo.glowui.util.render.QuickDraw;
 import com.ejo.gravityshapes.Util;
 import com.ejo.gravityshapes.objects.PhysicsCircle;
@@ -100,7 +100,7 @@ public class CollisionGravityScene extends Scene {
             obj.setDebugVectorCap(100);
 
             //Set Gravity Force
-            obj.addForce(Util.calculateGravityForce(1,obj, getPhysicsObjects(), 5));
+            obj.addForce(GravityUtil.calculateGravityForce(1,obj, getPhysicsObjects(), 5));
 
             //Do Collisions
             if (doCollisions) {
@@ -237,7 +237,7 @@ public class CollisionGravityScene extends Scene {
     }
 
     private void drawShootingObject() {
-        RegularPolygonUI polygonUI = new RegularPolygonUI(shootPos, com.ejo.glowui.util.Util.GLOW_BLUE,true,shootSize,shootVertices,new Angle(shootSpin,true));
+        RegularPolygonUI polygonUI = new RegularPolygonUI(shootPos, QuickDraw.GLOW_BLUE,true,shootSize,shootVertices,new Angle(shootSpin,true));
         GL11.glLineWidth(3);
         polygonUI.draw();
         LineUI line = new LineUI(ColorE.WHITE, LineUI.Type.DOTTED,2,shootPos,shootPos.getAdded(shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1))));

@@ -13,7 +13,7 @@ import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
 import com.ejo.glowui.scene.elements.widget.SliderUI;
 import com.ejo.glowui.scene.elements.widget.ToggleUI;
-import com.ejo.glowui.util.Key;
+import com.ejo.glowui.util.input.Key;
 
 import java.awt.*;
 import java.util.Random;

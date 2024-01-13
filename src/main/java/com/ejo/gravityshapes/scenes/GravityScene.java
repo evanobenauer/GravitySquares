@@ -9,8 +9,8 @@ import com.ejo.glowui.scene.elements.shape.LineUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
-import com.ejo.glowui.util.Key;
-import com.ejo.glowui.util.Mouse;
+import com.ejo.glowui.util.input.Key;
+import com.ejo.glowui.util.input.Mouse;
 import com.ejo.glowui.util.render.QuickDraw;
 import com.ejo.gravityshapes.Util;
 import com.ejo.gravityshapes.objects.PhysicsPolygon;
@@ -115,7 +115,7 @@ public class GravityScene extends Scene {
             if (doWallBounce) obj.doWallBounce(this);
 
             //Set Gravity Force
-            obj.addForce(Util.calculateGravityForce(1,obj, getPhysicsObjects(), 10));
+            obj.addForce(GravityUtil.calculateGravityForce(1,obj, getPhysicsObjects(), 10));
         }
 
         //Run Shoot New Object Computations
@@ -177,7 +177,7 @@ public class GravityScene extends Scene {
                 VectorMod gravityForce = Vector.NULL.getMod();
                 for (PhysicsPolygon otherObject : physicsPolygons) {
                     if (!otherObject.isPhysicsDisabled()) {
-                        Vector gravityFromOtherObject = GravityUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity));
+                        Vector gravityFromOtherObject = GravityUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity),0);
                         if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
                     }
                 }
@@ -188,7 +188,7 @@ public class GravityScene extends Scene {
     }
 
     private void drawShootingObject() {
-        RegularPolygonUI polygonUI = new RegularPolygonUI(shootPos, com.ejo.glowui.util.Util.GLOW_BLUE,true,shootSize,shootVertices,new Angle(shootSpin,true));
+        RegularPolygonUI polygonUI = new RegularPolygonUI(shootPos, QuickDraw.GLOW_BLUE,true,shootSize,shootVertices,new Angle(shootSpin,true));
         GL11.glLineWidth(3);
         polygonUI.draw();
         LineUI line = new LineUI(ColorE.WHITE, LineUI.Type.DOTTED,2,shootPos,shootPos.getAdded(shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1))));
