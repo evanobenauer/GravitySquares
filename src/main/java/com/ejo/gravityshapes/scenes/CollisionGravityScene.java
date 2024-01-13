@@ -226,7 +226,7 @@ public class CollisionGravityScene extends Scene {
                 VectorMod gravityForce = Vector.NULL.getMod();
                 for (PhysicsCircle otherObject : physicsCircles) {
                     if (!otherObject.isPhysicsDisabled()) {
-                        Vector gravityFromOtherObject = GravityUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity));
+                        Vector gravityFromOtherObject = GravityUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity),0);
                         if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
                     }
                 }
