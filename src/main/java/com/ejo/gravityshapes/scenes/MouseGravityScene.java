@@ -25,7 +25,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class MultiParticleGravityScene extends Scene {
+public class MouseGravityScene extends Scene {
 
     private final ButtonUI buttonX = new ButtonUI(Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255), ButtonUI.MouseButton.LEFT,() -> getWindow().setScene(new TitleScene()));
 
@@ -46,7 +46,7 @@ public class MultiParticleGravityScene extends Scene {
 
     private final int vertexLow = 29, vertexHigh = 30;
 
-    public MultiParticleGravityScene(int objectCount, double sizeMin, double sizeMax, boolean doWallBounce, boolean drawFieldLines) {
+    public MouseGravityScene(int objectCount, double sizeMin, double sizeMax, boolean doWallBounce, boolean drawFieldLines) {
         super("Orbit Scene");
         DoOnce.DEFAULT1.reset();
 
