@@ -38,10 +38,10 @@ public class TitleScene extends Scene {
     private final ToggleUI toggleDrawFieldLines = new ToggleUI("Draw Field Lines", new Vector(10, 190), new Vector(300, 20), ColorE.BLUE, drawFieldLines);
 
     private final ButtonUI buttonStart = new ButtonUI("Start!", Vector.NULL, new Vector(200, 60), new ColorE(0, 125, 200, 200), ButtonUI.MouseButton.LEFT, () -> {
-        //getWindow().setScene(new GravityScene(objectCount.get(), minSize.get(), maxSize.get(), bigObject.get(), doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));
+        getWindow().setScene(new GravityScene(objectCount.get(), minSize.get(), maxSize.get(), bigObject.get(), doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));
         //getWindow().setScene(new ElectricScene(objectCount.get(), objectCount.get(), maxSize.get(), doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));
         //getWindow().setScene(new CollisionGravityScene(objectCount.get(), minSize.get(), maxSize.get(), doWallBounce.get(), drawFieldLines.get()));
-        getWindow().setScene(new MouseGravityScene(objectCount.get(), minSize.get(), maxSize.get(), doWallBounce.get(), drawFieldLines.get()));
+        //getWindow().setScene(new MouseGravityScene(objectCount.get(), minSize.get(), maxSize.get(), doWallBounce.get(), drawFieldLines.get()));
         SettingManager.getDefaultManager().saveAll();
     });
 

@@ -256,7 +256,7 @@ public class GravityScene extends Scene {
         Random random = new Random();
         for (int i = 0; i < objectCount; i++) {
             double trueSize = (sizeMin == sizeMax) ? sizeMax : random.nextDouble(sizeMin, sizeMax);
-            double startVelRange = 10;
+            double startVelRange = 20;
             ColorE randomColor = new ColorE(random.nextInt(25,255),random.nextInt(25,255),random.nextInt(25,255),255);
             addElements(new PhysicsPolygon(
                     new RegularPolygonUI(Vector.NULL, randomColor, trueSize, random.nextInt(3,8),new Angle(random.nextDouble(0,2*Math.PI))), (double) 4 /3*Math.PI*Math.pow(trueSize,3),
