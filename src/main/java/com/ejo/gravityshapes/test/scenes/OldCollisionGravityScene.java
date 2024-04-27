@@ -1,4 +1,4 @@
-package com.ejo.gravityshapes.scenes;
+package com.ejo.gravityshapes.test.scenes;
 
 import com.ejo.glowlib.math.Angle;
 import com.ejo.glowlib.math.Vector;
@@ -7,7 +7,6 @@ import com.ejo.glowlib.misc.ColorE;
 import com.ejo.glowlib.misc.DoOnce;
 import com.ejo.glowui.scene.Scene;
 import com.ejo.glowui.scene.elements.ElementUI;
-import com.ejo.glowui.scene.elements.shape.CircleUI;
 import com.ejo.glowui.scene.elements.shape.LineUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
@@ -15,7 +14,9 @@ import com.ejo.glowui.scene.elements.widget.ButtonUI;
 import com.ejo.glowui.util.input.Key;
 import com.ejo.glowui.util.input.Mouse;
 import com.ejo.glowui.util.render.QuickDraw;
-import com.ejo.gravityshapes.objects.PhysicsCircle;
+import com.ejo.gravityshapes.Util;
+import com.ejo.gravityshapes.objects.PhysicsPolygon;
+import com.ejo.gravityshapes.scenes.TitleScene;
 import com.ejo.uiphysics.elements.PhysicsObjectUI;
 import com.ejo.uiphysics.util.GravityUtil;
 import com.ejo.uiphysics.util.VectorUtil;
@@ -25,7 +26,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class MouseGravityScene extends Scene {
+public class OldCollisionGravityScene extends Scene {
 
     private final ButtonUI buttonX = new ButtonUI(Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255), ButtonUI.MouseButton.LEFT,() -> getWindow().setScene(new TitleScene()));
 
@@ -46,12 +47,12 @@ public class MouseGravityScene extends Scene {
 
     private final int vertexLow = 29, vertexHigh = 30;
 
-    public MouseGravityScene(int objectCount, double sizeMin, double sizeMax, boolean doWallBounce, boolean drawFieldLines) {
+    public OldCollisionGravityScene(int objectCount, double sizeMin, double sizeMax, boolean doWallBounce, boolean drawFieldLines) {
         super("Orbit Scene");
         DoOnce.DEFAULT1.reset();
 
         this.doWallBounce = doWallBounce;
-        this.doCollisions = false;
+        this.doCollisions = true;
         this.drawFieldLines = drawFieldLines;
 
         this.shooting = false;
@@ -64,8 +65,7 @@ public class MouseGravityScene extends Scene {
         this.shooter.run(() -> {});
 
         addStars();
-        //addPhysicsObjects(objectCount,sizeMin,sizeMax);
-        addPhysicsObjects(objectCount * 20,sizeMin,sizeMax);
+        addPhysicsObjects(objectCount,sizeMin,sizeMax);
         addElements(buttonX);
     }
 
@@ -92,21 +92,29 @@ public class MouseGravityScene extends Scene {
     public void tick() {
         initObjectPositions();
 
-
-        for (PhysicsCircle obj : getPhysicsObjects()) {
+        for (PhysicsPolygon obj : getPhysicsObjects()) {
             if (obj.isPhysicsDisabled()) continue;
 
             //Debug Vectors
             obj.setDebugVectorForceScale((double) 1 /100);
             obj.setDebugVectorCap(100);
 
-
             //Set Gravity Force
-            if (Mouse.BUTTON_LEFT.isButtonDown()) applyGravityTowardsCursor(obj,getWindow().getScaledMousePos(),1);
-            if (Mouse.BUTTON_RIGHT.isButtonDown()) applyGravityTowardsCursor(obj,getWindow().getScaledMousePos(),-1);
+            obj.addForce(GravityUtil.calculateGravityForce(1,obj, getPhysicsObjects(), 5));
+
+            //Do Collisions
+            if (doCollisions) {
+                for (PhysicsPolygon otherObject : getPhysicsObjects()) {
+                    if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
+                    if (Util.areObjectsInCollisionRange(obj, otherObject) && obj.isColliding(otherObject)) {
+                        doCollision(obj,otherObject,.4,.1);
+                    }
+                }
+            }
 
             //Do Wall Bounce
             if (doWallBounce) obj.doWallBounce(this,.1);
+
         }
 
         //Run Shoot New Object Computations
@@ -116,14 +124,7 @@ public class MouseGravityScene extends Scene {
         super.tick();
     }
 
-    private void applyGravityTowardsCursor(PhysicsCircle obj, Vector mousePos, double G) {
-        int mouseMass = 1000000;
-        Vector distanceVector = VectorUtil.calculateVectorBetweenObjectAndPoint(obj,mousePos).getMultiplied(-1);
-        Vector force = distanceVector.getUnitVector().getMultiplied(G * mouseMass * obj.getMass() / (distanceVector.getMagnitude() * distanceVector.getMagnitude()));
-        if (distanceVector.getMagnitude() > 10) obj.addForce(force);
-    }
-
-    private void doCollision(PhysicsCircle obj1, PhysicsCircle obj2, double mRestitution, double fCoefficient) {
+    private void doCollision(PhysicsPolygon obj1, PhysicsPolygon obj2, double mRestitution, double fCoefficient) {
         //Obj1 is reference frame. Obj2 is observed object
         Vector dirVec = VectorUtil.calculateVectorBetweenObjects(obj2,obj1);
 
@@ -159,7 +160,7 @@ public class MouseGravityScene extends Scene {
         Vector nObj1FrictionForce = relativeVelocityPerpendicular.getMagnitude() > 1 ? relativeVelocityPerpendicular.getUnitVector().getMultiplied(relativeForceParallel.getMagnitude() * fCoefficient) : Vector.NULL;
 
         //Set Collision boundary pushing
-        double overlap = obj1.getCircle().getRadius() + obj2.getCircle().getRadius() - dirVec.getMagnitude();
+        double overlap = obj1.getPolygon().getRadius() + obj2.getPolygon().getRadius() - dirVec.getMagnitude();
         obj1.setPos(obj1.getPos().getAdded(uParallel.getMultiplied(-overlap/2)));
         obj2.setPos(obj2.getPos().getAdded(uParallel.getMultiplied(overlap/2)));
 
@@ -199,7 +200,7 @@ public class MouseGravityScene extends Scene {
                 }
                 if (isMouseFree) {
                     shootPos = mousePos;
-                    //shooting = true;
+                    shooting = true;
                 }
             }
             if (action == Mouse.ACTION_RELEASE) shooting = false;
@@ -215,7 +216,7 @@ public class MouseGravityScene extends Scene {
         }
     }
 
-    private void drawFieldLines(double lineDensity, ArrayList<PhysicsCircle> physicsCircles) {
+    private void drawFieldLines(double lineDensity, ArrayList<PhysicsPolygon> PhysicsPolygons) {
         int inverseDensity = (int) (1/lineDensity);
         int windowWidth = (int)getWindow().getScaledSize().getX();
         int windowHeight = (int)getWindow().getScaledSize().getY();
@@ -223,7 +224,7 @@ public class MouseGravityScene extends Scene {
         for (int x = 0; x < windowWidth / inverseDensity + 1; x++) {
             for (int y = 0; y < windowHeight / inverseDensity + 1; y++) {
                 VectorMod gravityForce = Vector.NULL.getMod();
-                for (PhysicsCircle otherObject : physicsCircles) {
+                for (PhysicsPolygon otherObject : PhysicsPolygons) {
                     if (!otherObject.isPhysicsDisabled()) {
                         Vector gravityFromOtherObject = GravityUtil.calculateGravitationalField(1,otherObject,new Vector(x,y).getMultiplied(inverseDensity),0);
                         if (!(String.valueOf(gravityFromOtherObject.getMagnitude())).equals("NaN")) gravityForce.add(gravityFromOtherObject);
@@ -261,7 +262,7 @@ public class MouseGravityScene extends Scene {
                 Random random = new Random();
                 shootVelocity = shootPos.getAdded(getWindow().getScaledMousePos().getMultiplied(-1)).getMultiplied(.75);
                 ColorE randomColor = new ColorE(random.nextInt(25,255),random.nextInt(25,255),random.nextInt(25,255),255);
-                PhysicsCircle poly = new PhysicsCircle(new CircleUI(shootPos, randomColor, shootSize, CircleUI.Type.MEDIUM),(double) 4 /3*Math.PI*Math.pow(shootSize,3),shootVelocity,Vector.NULL);
+                PhysicsPolygon poly = new PhysicsPolygon(new RegularPolygonUI(shootPos,randomColor,false,shootSize,shootVertices,new Angle(shootSpin,true)),(double) 4 /3*Math.PI*Math.pow(shootSize,3),shootVelocity,Vector.NULL);
                 queueAddElements(poly);
             });
         }
@@ -274,7 +275,7 @@ public class MouseGravityScene extends Scene {
 
     private void setRandomObjectPositions() {
         Random random = new Random();
-        for (PhysicsCircle obj : getPhysicsObjects())
+        for (PhysicsPolygon obj : getPhysicsObjects())
             obj.setPos(new Vector(random.nextDouble(0,getSize().getX()),random.nextDouble(0,getSize().getY())));
         for (ElementUI el : getElements()) {
             if (el instanceof RectangleUI rect && rect.shouldRender() && !rect.shouldTick()) {
@@ -301,8 +302,8 @@ public class MouseGravityScene extends Scene {
             double trueSize = (sizeMin == sizeMax) ? sizeMax : random.nextDouble(sizeMin, sizeMax);
             double startVelRange = 10;
             ColorE randomColor = new ColorE(random.nextInt(25,255),random.nextInt(25,255),random.nextInt(25,255),255);
-            addElements(new PhysicsCircle(
-                    new CircleUI(Vector.NULL, randomColor, trueSize, CircleUI.Type.MEDIUM), (double) 4 /3*Math.PI*Math.pow(trueSize,3),
+            addElements(new PhysicsPolygon(
+                    new RegularPolygonUI(Vector.NULL, randomColor, trueSize, 30,new Angle(random.nextDouble(0,2*Math.PI))), (double) 4 /3*Math.PI*Math.pow(trueSize,3),
                     new Vector(random.nextDouble(-startVelRange,startVelRange),random.nextDouble(-startVelRange,startVelRange)), Vector.NULL));
         }
     }
@@ -317,10 +318,10 @@ public class MouseGravityScene extends Scene {
     }
 
 
-    public ArrayList<PhysicsCircle> getPhysicsObjects() {
-        ArrayList<PhysicsCircle> rectangles = new ArrayList<>();
+    public ArrayList<PhysicsPolygon> getPhysicsObjects() {
+        ArrayList<PhysicsPolygon> rectangles = new ArrayList<>();
         for (ElementUI elementUI : getElements()) {
-            if (elementUI instanceof PhysicsCircle polygon) rectangles.add(polygon);
+            if (elementUI instanceof PhysicsPolygon polygon) rectangles.add(polygon);
         }
         return rectangles;
     }

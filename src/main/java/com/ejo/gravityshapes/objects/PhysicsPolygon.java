@@ -8,6 +8,7 @@ import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
 import com.ejo.glowlib.math.Vector;
 import com.ejo.uiphysics.elements.PhysicsDraggableUI;
 import com.ejo.uiphysics.elements.PhysicsObjectUI;
+import com.ejo.uiphysics.util.VectorUtil;
 
 public class PhysicsPolygon extends PhysicsDraggableUI {
 
@@ -27,8 +28,57 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         getPolygon().setRotation(new Angle(getSpin()));
     }
 
+    public void doPushCollision(PhysicsPolygon obj2, double mRestitution, double fCoefficient) {
+        //this is reference frame. Obj2 is observed object
+        Vector dirVec = VectorUtil.calculateVectorBetweenObjects(obj2,this);
+
+        Vector uParallel = dirVec.getUnitVector(); //From this to Obj2
+        Vector uPerpendicular = uParallel.getCross(Vector.K); //From this to Obj2
+
+        //Calculate Relative Velocity
+        Vector relativeVelocity = obj2.getVelocity().getSubtracted(this.getVelocity());
+        Vector relativeVelocityPerpendicular = uPerpendicular.getMultiplied(relativeVelocity.getDot(uPerpendicular));
+
+        //Calculate Relative Force
+        Vector relativeForce = obj2.getNetForce().getSubtracted(this.getNetForce());
+        Vector relativeForceParallel = uParallel.getMultiplied(relativeForce.getDot(uParallel));
+
+        //Calculate Parallel Velocities
+        Vector thisVelParallel = uParallel.getMultiplied(this.getVelocity().getDot(uParallel));
+        Vector obj2VelParallel = uParallel.getMultiplied(obj2.getVelocity().getDot(uParallel));
+
+        //Calculate Parallel Momentum
+        Vector thisMomentumParallel = thisVelParallel.getMultiplied(this.getMass());
+        Vector obj2MomentumParallel = obj2VelParallel.getMultiplied(obj2.getMass());
+        Vector totalMomentumParallel = thisMomentumParallel.getAdded(obj2MomentumParallel);
+
+        //Calculate Post-Collision Obj2 Velocity
+        Vector nObj2VelParallel = totalMomentumParallel.getSubtracted(obj2VelParallel.getSubtracted(thisVelParallel).getMultiplied(this.getMass() * mRestitution)).getMultiplied(1 / (obj2.getMass() + this.getMass()));
+
+        //Calculate Object Parallel Changes in Velocity Post-Collision
+        Vector nObj2VelocityDiffParallel = nObj2VelParallel.getSubtracted(obj2VelParallel);
+        Vector nThisVelocityDiffParallel = nObj2VelocityDiffParallel.getMultiplied(-obj2.getMass()/this.getMass());
+
+        //Calculate perpendicular friction between objects
+        Vector nObj2FrictionForce = relativeVelocityPerpendicular.getMagnitude() > 1 ? relativeVelocityPerpendicular.getUnitVector().getMultiplied(-1).getMultiplied(relativeForceParallel.getMagnitude() * fCoefficient) : Vector.NULL;
+        Vector nThisFrictionForce = relativeVelocityPerpendicular.getMagnitude() > 1 ? relativeVelocityPerpendicular.getUnitVector().getMultiplied(relativeForceParallel.getMagnitude() * fCoefficient) : Vector.NULL;
+
+        //Set Collision boundary pushing
+        double overlap = this.getPolygon().getRadius() + obj2.getPolygon().getRadius() - dirVec.getMagnitude();
+        this.setPos(this.getPos().getAdded(uParallel.getMultiplied(-overlap/2)));
+        obj2.setPos(obj2.getPos().getAdded(uParallel.getMultiplied(overlap/2)));
+
+        //Apply Friction Force
+        this.addForce(nThisFrictionForce);
+        obj2.addForce(nObj2FrictionForce);
+
+        //Set both object velocities to their new variants.
+        this.setVelocity(this.getVelocity().getAdded(nThisVelocityDiffParallel));
+        obj2.setVelocity(obj2.getVelocity().getAdded(nObj2VelocityDiffParallel));
+    }
+
     //TODO: Make a "Bop" sound effect from the collision
-    public void doCollision(PhysicsPolygon object) {
+    public void doMergeCollision(PhysicsPolygon object) {
         double weight = getMass() / (object.getMass() + getMass());
 
         //Set states
@@ -102,9 +152,8 @@ public class PhysicsPolygon extends PhysicsDraggableUI {
         return rad;
     }
 
-    public void doWallBounce(Scene scene) {
+    public void doWallBounce(Scene scene, double mul) {
         PhysicsObjectUI object = this;
-        double mul = .1f;
         if (getPos().getX() + getPolygon().getRadius() > scene.getSize().getX()) {
             object.setVelocity(new Vector(-mul * object.getVelocity().getX(), object.getVelocity().getY()));
             setPos(new Vector(scene.getSize().getX() - getPolygon().getRadius(), getPos().getY()));

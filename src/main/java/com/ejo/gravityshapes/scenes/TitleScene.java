@@ -11,9 +11,11 @@ import com.ejo.glowui.scene.elements.ElementUI;
 import com.ejo.glowui.scene.elements.TextUI;
 import com.ejo.glowui.scene.elements.shape.RectangleUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
+import com.ejo.glowui.scene.elements.widget.ModeCycleUI;
 import com.ejo.glowui.scene.elements.widget.SliderUI;
 import com.ejo.glowui.scene.elements.widget.ToggleUI;
 import com.ejo.glowui.util.input.Key;
+import com.ejo.gravityshapes.test.scenes.CollisionTestScene;
 
 import java.awt.*;
 import java.util.Random;
@@ -23,25 +25,24 @@ public class TitleScene extends Scene {
     private final Setting<Integer> objectCount = new Setting<>("objectCount", 50);
     private final Setting<Double> minSize = new Setting<>("minSize", 3d);
     private final Setting<Double> maxSize = new Setting<>("maxSize", 15d);
-    private final Setting<Boolean> bigObject = new Setting<>("bigObject", false);
     private final Setting<Boolean> doWallBounce = new Setting<>("doBounce", true);
-    private final Setting<Boolean> doCollisions = new Setting<>("doCollisions", false); //TODO: Make this into a mode cycle to choose the collision type
-    private final Setting<Boolean> drawFieldLines = new Setting<>("drawFieldLines", false);
+    private final Setting<String> collisionType = new Setting<>("collisionType", "NONE");
 
     private final SliderUI<Integer> sliderObjectCount = new SliderUI<>("Object Count", new Vector(10, 10), new Vector(300, 20), ColorE.BLUE, objectCount, 0, 500, 1, SliderUI.Type.INTEGER, true);
     private final SliderUI<Double> sliderMinSize = new SliderUI<>("Min Size", new Vector(10, 40), new Vector(300, 20), ColorE.BLUE, minSize, 0.1d, 50d, .1, SliderUI.Type.FLOAT, true);
     private final SliderUI<Double> sliderMaxSize = new SliderUI<>("Max Size", new Vector(10, 70), new Vector(300, 20), ColorE.BLUE, maxSize, 1.1d, 50d, .1, SliderUI.Type.FLOAT, true);
 
     private final ToggleUI toggleDoWallBounce = new ToggleUI("Do Wall Bounce", new Vector(10, 100), new Vector(300, 20), ColorE.BLUE, doWallBounce);
-    private final ToggleUI toggleDoCollisions = new ToggleUI("Do Collisions", new Vector(10, 130), new Vector(300, 20), ColorE.BLUE, doCollisions);
-    private final ToggleUI toggleBigObject = new ToggleUI("Big Object", new Vector(10, 160), new Vector(300, 20), ColorE.BLUE, bigObject);
-    private final ToggleUI toggleDrawFieldLines = new ToggleUI("Draw Field Lines", new Vector(10, 190), new Vector(300, 20), ColorE.BLUE, drawFieldLines);
+    private final ModeCycleUI<String> modeCollisionType = new ModeCycleUI<>("Type", new Vector(10, 130), new Vector(300, 20), ColorE.BLUE, collisionType,"NONE","MERGE","PUSH");
 
     private final ButtonUI buttonStart = new ButtonUI("Start!", Vector.NULL, new Vector(200, 60), new ColorE(0, 125, 200, 200), ButtonUI.MouseButton.LEFT, () -> {
-        //getWindow().setScene(new GravityScene(objectCount.get(), minSize.get(), maxSize.get(), bigObject.get(), doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));
+        getWindow().setScene(new GravityScene(objectCount.get(), minSize.get(), maxSize.get(), doWallBounce.get(), collisionType.get()));
+        //getWindow().setScene(new CollisionTestScene(objectCount.get(), maxSize.get(), doWallBounce.get()));
+        //getWindow().setScene(new OptimizedGravityScene(objectCount.get(), maxSize.get(), doWallBounce.get()));
+        //getWindow().setScene(new OptimizedCollisionGravityScene((Key.isShiftDown() ? 10 : 1) * objectCount.get(), maxSize.get(), doWallBounce.get()));
         //getWindow().setScene(new ElectricScene(objectCount.get(), objectCount.get(), maxSize.get(), doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));
         //getWindow().setScene(new CollisionGravityScene(objectCount.get(), minSize.get(), maxSize.get(), doWallBounce.get(), drawFieldLines.get()));
-        getWindow().setScene(new MouseGravityScene(objectCount.get(), minSize.get(), maxSize.get(), doWallBounce.get(), drawFieldLines.get()));
+        //getWindow().setScene(new MouseGravityScene(objectCount.get(), minSize.get(), maxSize.get(), doWallBounce.get(), drawFieldLines.get()));
         SettingManager.getDefaultManager().saveAll();
     });
 
@@ -93,7 +94,7 @@ public class TitleScene extends Scene {
     private void initElements() {
         DoOnce.DEFAULT6.run(() -> {
             addStars();
-            addElements(buttonStart, title, sliderObjectCount, sliderMinSize, sliderMaxSize, toggleBigObject, toggleDoWallBounce, toggleDoCollisions,toggleDrawFieldLines);
+            addElements(buttonStart, title, sliderObjectCount, sliderMinSize, sliderMaxSize, toggleDoWallBounce, modeCollisionType);
         });
     }
 

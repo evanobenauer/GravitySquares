@@ -11,7 +11,9 @@ import com.ejo.glowui.scene.elements.shape.RegularPolygonUI;
 import com.ejo.glowui.scene.elements.widget.ButtonUI;
 import com.ejo.glowui.util.input.Key;
 import com.ejo.glowui.util.input.Mouse;
+import com.ejo.glowui.util.render.Fonts;
 import com.ejo.glowui.util.render.QuickDraw;
+import com.ejo.gravityshapes.Grid;
 import com.ejo.gravityshapes.Util;
 import com.ejo.gravityshapes.objects.PhysicsPolygon;
 import com.ejo.glowlib.math.Vector;
@@ -28,11 +30,11 @@ public class GravityScene extends Scene {
 
     private final ButtonUI buttonX = new ButtonUI(Vector.NULL,new Vector(15,15),new ColorE(200,0,0,255), ButtonUI.MouseButton.LEFT,() -> getWindow().setScene(new TitleScene()));
 
-    private PhysicsPolygon bigObject = null;
-
     private final boolean doWallBounce;
-    private final boolean doCollisions;
+    private final String collisionType;
     private final boolean drawFieldLines;
+
+    private final double baseSize;
 
     private boolean shooting;
     private boolean shouldRenderShooting;
@@ -45,13 +47,23 @@ public class GravityScene extends Scene {
     private final DoOnce shooter = new DoOnce();
     private final DoOnce shooterInitializer = new DoOnce();
 
-    public GravityScene(int objectCount, double sizeMin, double sizeMax, boolean bigObject, boolean doWallBounce, boolean doCollisions, boolean drawFieldLines) {
+    public GravityScene(int objectCount, double sizeMin, double sizeMax, boolean doWallBounce, String collisionType) {
         super("Orbit Scene");
         DoOnce.DEFAULT1.reset();
 
         this.doWallBounce = doWallBounce;
-        this.doCollisions = doCollisions;
-        this.drawFieldLines = drawFieldLines;
+        this.collisionType = collisionType;
+        this.drawFieldLines = false;
+
+        int verticesMin = 3;
+        int verticesMax = 8;
+
+        if (collisionType.equals("PUSH")) {
+            sizeMin = sizeMax;
+            verticesMin = verticesMax = 30;
+        }
+
+        this.baseSize = sizeMin;
 
         this.shooting = false;
         this.shouldRenderShooting = false;
@@ -63,8 +75,7 @@ public class GravityScene extends Scene {
         this.shooter.run(() -> {});
 
         addStars();
-        addPhysicsObjects(objectCount,sizeMin,sizeMax);
-        if (bigObject) addBigObject(sizeMax);
+        addPhysicsObjects(objectCount,sizeMin,sizeMax, verticesMin,verticesMax);
         addElements(buttonX);
     }
 
@@ -75,10 +86,18 @@ public class GravityScene extends Scene {
 
         updateStarPositionsOnResize();
 
-        if (this.drawFieldLines) drawFieldLines(.05, getPhysicsObjects());
+        if (this.drawFieldLines || Key.KEY_F.isKeyDown()) drawFieldLines(.05, getPhysicsObjects());
 
         //Draw all screen objects
         super.draw();
+
+        //Draw Object Count
+        if (getWindow().isDebug()) {
+            try {
+                QuickDraw.drawText("Object Count: " + getPhysicsObjects().size(), Fonts.getDefaultFont(14), new Vector(2, 87), ColorE.WHITE);
+            } catch (Exception ignored) {
+            }
+        }
 
         //Draw Shooting Object Visual
         if (shooting && shouldRenderShooting) drawShootingObject();
@@ -91,6 +110,9 @@ public class GravityScene extends Scene {
     public void tick() {
         initObjectPositions();
 
+        Grid collisionGrid = null;
+        if (collisionType.equals("PUSH")) collisionGrid = new Grid(getSize(),getPhysicsObjects(),(int)baseSize*2);
+
         for (PhysicsPolygon obj : getPhysicsObjects()) {
             if (obj.isPhysicsDisabled()) continue;
 
@@ -98,21 +120,11 @@ public class GravityScene extends Scene {
             obj.setDebugVectorForceScale((double) 1 /100); //TODO: Make the force vector scale multiple of max mass
             obj.setDebugVectorCap(100);
 
-            //Do Collisions
-            if (doCollisions) {
-                for (PhysicsPolygon otherObject : getPhysicsObjects()) {
-                    if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
-                    if (Util.areObjectsInCollisionRange(obj, otherObject) && obj.isColliding(otherObject)) obj.doCollision(otherObject);
-                }
-            } else {
-                for (PhysicsPolygon otherObject : getPhysicsObjects()) {
-                    if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
-                    if (Util.areObjectsInCollisionRange(obj, otherObject) && obj.isColliding(otherObject)) obj.applyTorqueFromCollision(otherObject,50);
-                }
-            }
+            //Updates collision data
+            updateCollision(obj,collisionGrid);
 
             //Do Wall Bounce
-            if (doWallBounce) obj.doWallBounce(this);
+            if (doWallBounce) obj.doWallBounce(this,.1);
 
             //Set Gravity Force
             obj.addForce(GravityUtil.calculateGravityForce(1,obj, getPhysicsObjects(), 10));
@@ -167,6 +179,33 @@ public class GravityScene extends Scene {
         }
     }
 
+    private void updateCollision(PhysicsObjectUI obj, Grid collisionGrid) {
+        switch (collisionType) {
+            case "NONE" -> {
+                for (PhysicsPolygon otherObject : getPhysicsObjects()) {
+                    if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
+                    if (Util.areObjectsInCollisionRange(obj, otherObject) && obj.isColliding(otherObject))
+                        ((PhysicsPolygon)obj).applyTorqueFromCollision(otherObject,50);
+                }
+            }
+            case "MERGE" -> {
+                for (PhysicsPolygon otherObject : getPhysicsObjects()) {
+                    if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
+                    if (Util.areObjectsInCollisionRange(obj, otherObject) && obj.isColliding(otherObject)) {
+                        ((PhysicsPolygon)obj).doMergeCollision(otherObject);
+                        queueRemoveElements(otherObject);
+                    }
+                }
+            }
+            case "PUSH" -> {
+                for (PhysicsObjectUI otherObject : collisionGrid.getSurroundingObjects(obj)) {
+                    if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
+                    if (obj.isColliding(otherObject)) ((PhysicsPolygon)obj).doPushCollision((PhysicsPolygon) otherObject,.6,.2);
+                }
+            }
+        }
+    }
+
     private void drawFieldLines(double lineDensity, ArrayList<PhysicsPolygon> physicsPolygons) {
         int inverseDensity = (int) (1/lineDensity);
         int windowWidth = (int)getWindow().getScaledSize().getX();
@@ -202,7 +241,7 @@ public class GravityScene extends Scene {
             shooter.reset();
             shooterInitializer.run(() -> {
                 Random random = new Random();
-                shootVertices = random.nextInt(3, 8);
+                shootVertices = collisionType.equals("PUSH") ? 30 : random.nextInt(3, 8);
                 shouldRenderShooting = true;
             });
         } else {
@@ -221,12 +260,7 @@ public class GravityScene extends Scene {
 
 
     private void initObjectPositions() {
-        DoOnce.DEFAULT1.run(() -> {
-            setRandomObjectPositions();
-
-            //Set Big Object start in the middle
-            if (bigObject != null) bigObject.setPos(getSize().getMultiplied(.5));
-        });
+        DoOnce.DEFAULT1.run(this::setRandomObjectPositions);
     }
 
     private void setRandomObjectPositions() {
@@ -252,23 +286,17 @@ public class GravityScene extends Scene {
     }
 
 
-    private void addPhysicsObjects(int objectCount, double sizeMin, double sizeMax) {
+    private void addPhysicsObjects(int objectCount, double sizeMin, double sizeMax, int verticesMin, int verticesMax) {
         Random random = new Random();
         for (int i = 0; i < objectCount; i++) {
             double trueSize = (sizeMin == sizeMax) ? sizeMax : random.nextDouble(sizeMin, sizeMax);
+            int trueVertices = (verticesMin == verticesMax) ? verticesMax : random.nextInt(verticesMin, verticesMax);
             double startVelRange = 10;
             ColorE randomColor = new ColorE(random.nextInt(25,255),random.nextInt(25,255),random.nextInt(25,255),255);
             addElements(new PhysicsPolygon(
-                    new RegularPolygonUI(Vector.NULL, randomColor, trueSize, random.nextInt(3,8),new Angle(random.nextDouble(0,2*Math.PI))), (double) 4 /3*Math.PI*Math.pow(trueSize,3),
+                    new RegularPolygonUI(Vector.NULL, randomColor, trueSize, trueVertices,new Angle(random.nextDouble(0,2*Math.PI))), (double) 4 /3*Math.PI*Math.pow(trueSize,3),
                     new Vector(random.nextDouble(-startVelRange,startVelRange),random.nextDouble(-startVelRange,startVelRange)), Vector.NULL));
         }
-    }
-
-    private void addBigObject(double sizeMax) {
-        double radius = sizeMax * 3;
-        addElements(this.bigObject = new PhysicsPolygon(
-                new RegularPolygonUI(Vector.NULL,ColorE.YELLOW, radius,30,new Angle(0)),
-                (double) 4 /3*Math.PI*Math.pow(radius,3),Vector.NULL,Vector.NULL));
     }
 
     private void addStars() {
