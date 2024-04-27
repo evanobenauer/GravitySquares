@@ -36,8 +36,8 @@ public class TitleScene extends Scene {
     private final ModeCycleUI<String> modeCollisionType = new ModeCycleUI<>("Type", new Vector(10, 130), new Vector(300, 20), ColorE.BLUE, collisionType,"NONE","MERGE","PUSH");
 
     private final ButtonUI buttonStart = new ButtonUI("Start!", Vector.NULL, new Vector(200, 60), new ColorE(0, 125, 200, 200), ButtonUI.MouseButton.LEFT, () -> {
-        getWindow().setScene(new GravityScene(objectCount.get(), minSize.get(), maxSize.get(), doWallBounce.get(), collisionType.get()));
-        //getWindow().setScene(new CollisionTestScene(objectCount.get(), maxSize.get(), doWallBounce.get()));
+        //getWindow().setScene(new GravityScene(objectCount.get(), minSize.get(), maxSize.get(), doWallBounce.get(), collisionType.get()));
+        getWindow().setScene(new CollisionTestScene(objectCount.get(),minSize.get(), maxSize.get(), doWallBounce.get(), collisionType.get()));
         //getWindow().setScene(new OptimizedGravityScene(objectCount.get(), maxSize.get(), doWallBounce.get()));
         //getWindow().setScene(new OptimizedCollisionGravityScene((Key.isShiftDown() ? 10 : 1) * objectCount.get(), maxSize.get(), doWallBounce.get()));
         //getWindow().setScene(new ElectricScene(objectCount.get(), objectCount.get(), maxSize.get(), doWallBounce.get(), doCollisions.get(), drawFieldLines.get()));

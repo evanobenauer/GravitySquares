@@ -111,7 +111,7 @@ public class GravityScene extends Scene {
         initObjectPositions();
 
         Grid collisionGrid = null;
-        if (collisionType.equals("PUSH")) collisionGrid = new Grid(getSize(),getPhysicsObjects(),(int)baseSize*2);
+        if (collisionType.equals("PUSH")) collisionGrid = new Grid(getSize(),getPhysicsObjects(),(int)Math.round(baseSize*2));
 
         for (PhysicsPolygon obj : getPhysicsObjects()) {
             if (obj.isPhysicsDisabled()) continue;
@@ -200,7 +200,9 @@ public class GravityScene extends Scene {
             case "PUSH" -> {
                 for (PhysicsObjectUI otherObject : collisionGrid.getSurroundingObjects(obj)) {
                     if (obj.equals(otherObject) || otherObject.isPhysicsDisabled()) continue;
-                    if (obj.isColliding(otherObject)) ((PhysicsPolygon)obj).doPushCollision((PhysicsPolygon) otherObject,.6,.2);
+                    double objectDistance = obj.getCenter().getSubtracted(otherObject.getCenter()).getMagnitude();
+                    boolean isColliding = objectDistance <= ((PhysicsPolygon)obj).getPolygon().getRadius() + ((PhysicsPolygon)otherObject).getPolygon().getRadius();
+                    if (isColliding) ((PhysicsPolygon)obj).doPushCollision((PhysicsPolygon) otherObject,.6,.2); //.6m .2f
                 }
             }
         }
